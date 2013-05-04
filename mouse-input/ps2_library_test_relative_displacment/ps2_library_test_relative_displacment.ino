@@ -72,6 +72,6 @@ void loop(){
   Serial.print(my, DEC);
   Serial.println();
   
-  delay(100);
+  delay(10);
 }
 
