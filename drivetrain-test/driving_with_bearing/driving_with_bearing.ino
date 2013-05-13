@@ -79,7 +79,7 @@ void recalc()
 }
 
 int i = 0;
-long distance = 100000;
+long distance = 200000;
 
 void loop(){
   recalc();
@@ -87,12 +87,18 @@ void loop(){
   if (y > distance){
     analogWrite(pwm_a, 0);	
     analogWrite(pwm_b, 0);
+ /* } else if ((abs(bearing) < 0.15) && (abs(x) < 50)){
+    analogWrite(pwm_a, 255);
+    analogWrite(pwm_b, 255);
+    
+    digitalWrite(6, HIGH);
+    digitalWrite(7, HIGH);
+  */  
   } else {
     analogWrite(pwm_a, 255 - min(max(pow(x, 1.25), 0), 150));	
-    analogWrite(pwm_b, 255 + max(min(pow(x, 1.25), 0), -150));	
-  }
- 
-  if (x > 0){
+    analogWrite(pwm_b, 255 + max(min(pow(x, 1.25), 0) * 1.2, -150));	
+    
+    if (x > 0){
     // too far right, turn left
     digitalWrite(6, HIGH);
     digitalWrite(7, LOW);
@@ -100,11 +106,11 @@ void loop(){
     // too far left, turn right 
     digitalWrite(6, LOW);
     digitalWrite(7, HIGH);
-  } else {
-    // all good
-    digitalWrite(6, LOW);
-    digitalWrite(7, LOW);
   }
+    
+  }
+ 
+  
   
   
 
