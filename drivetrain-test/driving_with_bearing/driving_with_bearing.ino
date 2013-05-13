@@ -9,7 +9,7 @@
 #define dir_a 12  //dir control for motor outputs 1 and 2 is on digital pin 12
 #define dir_b 13  //dir control for motor outputs 3 and 4 is on digital pin 13
 
-
+#define motor_kill 2
 /*
  * The distance from the mouse to the axis of rotation
  * The units are the units used by the mouse
@@ -37,14 +37,17 @@ void setup(){
    pinMode(dir_a, OUTPUT);
    pinMode(dir_b, OUTPUT);
    
-     pinMode(6, OUTPUT);
+   pinMode(motor_kill, INPUT);
+
+   
+   pinMode(6, OUTPUT);
    pinMode(7, OUTPUT);
 
-  digitalWrite(dir_a, HIGH);  //Set motor direction, 1 low, 2 high
-  digitalWrite(dir_b, HIGH); //Set motor direction, 3 high, 4 low
+   digitalWrite(dir_a, HIGH);  //Set motor direction, 1 low, 2 high
+   digitalWrite(dir_b, HIGH); //Set motor direction, 3 high, 4 low
   
-  analogWrite(pwm_a, 255);	
-  analogWrite(pwm_b, 255);
+   analogWrite(pwm_a, 255);	
+   analogWrite(pwm_b, 255);
 
    mouse_init();
 }
@@ -84,7 +87,7 @@ long distance = 200000;
 void loop(){
   recalc();
 
-  if (y > distance){
+  if (y > distance || digitalRead(motor_kill)){
     analogWrite(pwm_a, 0);	
     analogWrite(pwm_b, 0);
  /* } else if ((abs(bearing) < 0.15) && (abs(x) < 50)){
@@ -95,8 +98,9 @@ void loop(){
     digitalWrite(7, HIGH);
   */  
   } else {
-    analogWrite(pwm_a, 255 - min(max(pow(x, 1.25), 0), 150));	
-    analogWrite(pwm_b, 255 + max(min(pow(x, 1.25), 0) * 1.2, -150));	
+     analogWrite(pwm_a, 255 - min(max(pow(x, 1.25), 0), 150));	
+     analogWrite(pwm_b, 255 + max(min(pow(x, 1.25), 0) * 1.2, -150));	
+
     
     if (x > 0){
     // too far right, turn left
