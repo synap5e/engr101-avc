@@ -1,7 +1,7 @@
 #include <ps2.h>
 
-#define MDATA 4
-#define MCLK 5
+#define MDATA 8
+#define MCLK 9
 
 #define FORWARD 0
 #define LEFT 1
