@@ -1,7 +1,7 @@
 #include <ps2.h>
 
-#define MDATA 4
-#define MCLK 5
+#define MDATA 8
+#define MCLK 9
 
 
 #define pwm_a 3  //PWM control for motor outputs 1 and 2 is on digital pin 3
@@ -122,6 +122,8 @@ void loop(){
    Serial.print(x);
    Serial.print(", ");
    Serial.print(y); 
+   Serial.print(". Motor ");
+   Serial.print(digitalRead(motor_kill)); 
    Serial.print(". Heading ");
    Serial.println(bearing);
   }
