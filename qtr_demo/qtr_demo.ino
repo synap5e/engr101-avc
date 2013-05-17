@@ -84,14 +84,31 @@ void loop()
   // print the sensor values as numbers from 0 to 9, where 0 means maximum reflectance and
   // 9 means minimum reflectance, followed by the line position
   unsigned char i;
-  for (i = 0; i < NUM_SENSORS; i++)
-  {
-    Serial.print(sensorValues[i] * 10 / 1001);
-    Serial.print(' ');
-  }
-  Serial.print("    ");
-  Serial.println(position);
-  
+  int threshold = 4;
+  if((sensorValues[3] > threshold) && (sensorValues[4] > threshold)){
+Serial.println("straight");
+Serial.print("sensor 3 = ");
+Serial.print(sensorValues[3]);
+Serial.print("sensor 4 = ");
+Serial.print(sensorValues[4]);}
+else if((sensorValues[0] > threshold) || (sensorValues[1] > threshold)||(sensorValues[2] > threshold) || (sensorValues[3] > threshold)){
+  Serial.print("right");
+Serial.print("sensor 0 = ");
+Serial.print(sensorValues[0]);
+Serial.print("sensor 1 = ");
+Serial.print(sensorValues[1]);
+Serial.print("sensor 2 = ");
+Serial.print(sensorValues[2]);
+}
+ else if((sensorValues[5] > threshold) || (sensorValues[6] > threshold)||(sensorValues[7] > threshold) || (sensorValues[4] > threshold)){
+    Serial.print("left");
+  Serial.print("sensor 5 = ");
+Serial.print(sensorValues[5]);
+Serial.print("sensor 6 = ");
+Serial.print(sensorValues[6]);
+Serial.print("sensor 7 = ");
+Serial.print(sensorValues[7]);}
+
   delay(250);
 }
  
