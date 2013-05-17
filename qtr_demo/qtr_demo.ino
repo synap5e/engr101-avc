@@ -162,9 +162,24 @@ QTRSensorsRC qtrrc((unsigned char[]) {3, 4, 5, 6, 7, 8, 9, 10},
   NUM_SENSORS, TIMEOUT, EMITTER_PIN); 
 unsigned int sensorValues[NUM_SENSORS];
 
+int pwm_a = 3;  //PWM control for motor outputs 1 and 2 is on digital pin 3
+int pwm_b = 11;  //PWM control for motor outputs 3 and 4 is on digital pin 11
+int dir_a = 12;  //dir control for motor outputs 1 and 2 is on digital pin 12
+int dir_b = 13;  //dir control for motor outputs 3 and 4 is on digital pin 13
 
 void setup()
 {
+  pinMode(pwm_a, OUTPUT);  //Set control pins to be outputs
+  pinMode(pwm_b, OUTPUT);
+  pinMode(dir_a, OUTPUT);
+  pinMode(dir_b, OUTPUT);
+  
+  digitalWrite(dir_a, HIGH);  //Set motor direction, 1 low, 2 high
+  digitalWrite(dir_b, HIGH); //Set motor direction, 3 high, 4 low
+  
+  analogWrite(pwm_a, 0);	
+  analogWrite(pwm_b, 0);
+  
   delay(500);
   int i;
   pinMode(13, OUTPUT);
@@ -235,14 +250,21 @@ void loop()
   long ave_mid = (sensorValues[4] + sensorValues[5])/2;
   long ave_right = (sensorValues[6] + sensorValues[7] + sensorValues[8])/3;
   
-  long mini = min(ave_left, ave_mid, ave_right);
+  long mini = min(min(ave_left, ave_mid),ave_right);
   
-  if (mini == ave_left)
+  if (mini == ave_left){
     Serial.print("Go left");
-  else if (mini == ave_mid)
+    analogWrite(pwm_a, 120);	
+    analogWrite(pwm_b, 255);
+  } else if (mini == ave_mid){
     Serial.print("Go for");
-  else
+    analogWrite(pwm_a, 255);	
+    analogWrite(pwm_b, 255);
+  } else {
     Serial.print("Go right");
+    analogWrite(pwm_a, 255);	
+    analogWrite(pwm_b, 120);
+  }
   
   Serial.print("Position: ");
   Serial.println(positions);
