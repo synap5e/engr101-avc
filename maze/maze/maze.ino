@@ -13,6 +13,11 @@
 #define dir_a 12  //dir control for motor outputs 1 and 2 is on digital pin 12
 #define dir_b 13  //dir control for motor outputs 3 and 4 is on digital pin 13
 
+#define IRFor 2
+#define IRLef 4
+#define IRBac 5
+#define IRRig 6
+
 #define motor_kill 2
 /*
  * The distance from the mouse to the axis of rotation
@@ -108,9 +113,9 @@ void loop(){
     
   
     if (going_forward) {
-//      tryGoForward();
+      tryGoForward();
     } else {
-//      tryGoBackward();
+      tryGoBackward();
     }
   } else {
     /*
@@ -171,10 +176,11 @@ void tryGoBackward() {
 }
 
 void go(int dir) {
+  analogWrite(pwm_a, 255);	
+  analogWrite(pwm_b, 255);
   if (dir == FORWARD) {
     digitalWrite(dir_a, HIGH);  //Set motor direction, 1 low, 2 high
     digitalWrite(dir_b, HIGH); //Set motor direction, 3 high, 4 low
-   
     x_to_travel = x_move;
   } else if (dir == BACKWARD) {
     digitalWrite(dir_a, LOW);  //Set motor direction, 1 low, 2 high
@@ -184,6 +190,8 @@ void go(int dir) {
   } else {
     Serial.print("Invalid Direction in go()! Dir: ");
     Serial.println(dir);
+    analogWrite(pwm_a, 0  v );	
+    analogWrite(pwm_b, 0);
   }
 }
 
@@ -206,12 +214,12 @@ void turn(int dir) {
 
 boolean canGo(int dir) {
   if (dir == LEFT) {
-    
+    return (digitalRead(IRLef) == HIGH);
   } else if (dir == FORWARD) {
-    
+    return (digitalRead(IRFor) == HIGH);
   } else if (dir == RIGHT) {
-    
+    return (digitalRead(IRRig) == HIGH);
   } else if (dir == BACKWARD) {
-    
+    return (digitalRead(IRBac) == HIGH);
   }
 }
