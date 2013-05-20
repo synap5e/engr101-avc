@@ -156,6 +156,7 @@ void loop()
 #define NUM_SENSORS   8     // number of sensors used
 #define TIMEOUT	 2500  // waits for 2500 us for sensor outputs to go low
 #define EMITTER_PIN   2     // emitter is controlled by digital pin 2
+#define debug
 
 // sensors 0 through 7 are connected to digital pins 3 through 10, respectively
 QTRSensorsRC qtrrc((unsigned char[]) {3, 4, 5, 6, 7, 8, 9, 10},
@@ -229,7 +230,10 @@ void loop()
   
   int threshold = 4;
 
-
+  /*print out debug values for the sensor.
+   *
+   */
+   #ifdef debug
   Serial.print(sensorValues[0]);
   Serial.print(", ");
   Serial.print(sensorValues[1]);
@@ -245,14 +249,15 @@ void loop()
   Serial.print(sensorValues[6]);
   Serial.print(", ");
   Serial.print(sensorValues[7]);
+  #endif
 
   long ave_left = (sensorValues[0] + sensorValues[1] + sensorValues[2])/3;
   long ave_mid = (sensorValues[4] + sensorValues[5])/2;
   long ave_right = (sensorValues[6] + sensorValues[7] + sensorValues[8])/3;
   
-  long mini = min(min(ave_left, ave_mid),ave_right);
+  long mini = min(min(ave_left, ave_mid),ave_right); //determining the lowest average sensor values
   
-  if (mini == ave_left){
+  if (mini == ave_left){ 
     Serial.print("Go left");
     analogWrite(pwm_a, 120);	
     analogWrite(pwm_b, 255);
@@ -262,7 +267,7 @@ void loop()
     analogWrite(pwm_b, 255);
   } else {
     Serial.print("Go right");
-    analogWrite(pwm_a, 255);	
+    analogWrite(pwm_a, 255);	 
     analogWrite(pwm_b, 120);
   }
   
