@@ -30,10 +30,11 @@ void setup() {
 
 void loop() {
   uint8_t inByte;
-  while ( Serial.available() > 0)
+  while ( xBeeSerial.available() > 0)
   {
-    inByte = Serial.read();
+    inByte = xBeeSerial.read();
     #ifdef debug
+    Serial.println();
     Serial.print(inByte, HEX);
     #endif
     if (inByte == 0x7E && pack == NULL)
@@ -47,6 +48,9 @@ void loop() {
       check_sum_total = 0;
     } 
     else if (pack == NULL){
+      #ifdef debug
+      Serial.print(".");
+      #endif
       return;
     }
     else if (packetIndex == 0 || packetIndex == 1)
