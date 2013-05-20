@@ -1,6 +1,9 @@
 #include <SoftwareSerial.h>
 
 //#define debug
+#define debug_errors
+
+#define MAX_PACKET_LENGTH 64
 
 #define zb_txPin 5
 #define zb_rxPin 4
@@ -43,6 +46,14 @@ void loop() {
       Serial.println(" is header");
       #endif
       pack = (xbee_packet*)malloc(sizeof(xbee_packet));
+      if (pack->data == NULL){
+           #ifdef debug_errors
+           Serial.println("! DROPPING PACKET - MALLOC FOR PACKET FAILED");
+           #endif
+           free(pack);
+           pack = NULL;
+           return;
+        }
       pack->data = NULL;
       packetIndex = -1;
       check_sum_total = 0;
@@ -70,7 +81,23 @@ void loop() {
       
       if (pack->data == NULL)
       {
+        if (pack->length > MAX_PACKET_LENGTH){
+           #ifdef debug_errors
+           Serial.println("! DROPPING PACKET - TOO LARGE");
+           #endif
+           free(pack);
+           pack = NULL;
+           return;
+        }
         pack->data = (uint8_t*)malloc((pack->length - 14) * sizeof(uint8_t));
+        if (pack->data == NULL){
+           #ifdef debug_errors
+           Serial.println("! DROPPING PACKET - MALLOC FOR DATA ARRAY FAILED");
+           #endif
+           free(pack);
+           pack = NULL;
+           return;
+        }
       } 
       pack->data[packetIndex-16] = inByte;
     }
