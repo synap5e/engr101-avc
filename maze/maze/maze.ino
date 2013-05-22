@@ -13,7 +13,7 @@
 #define dir_a 12  //dir control for motor outputs 1 and 2 is on digital pin 12
 #define dir_b 13  //dir control for motor outputs 3 and 4 is on digital pin 13
 
-#define IRFor 2
+#define IRFor A0
 #define IRLef 4
 #define IRBac 5
 #define IRRig 6
@@ -28,6 +28,9 @@
 // The values that need to be moved for one movement/turn
 #define x_move 500
 #define y_move 132
+#define force_x_move 5000
+
+#define motor_strength 128
 
 PS2 mouse(MCLK, MDATA);
 
@@ -39,6 +42,8 @@ long y = 0;
 long x_to_travel = 0;
 long bear_to_travel = 0;
 float bearing = 0.0;
+
+boolean force_straight = false;
 
 void mouse_init()
 {
@@ -67,9 +72,14 @@ void setup(){
 
    //digitalWrite(dir_a, HIGH);  //Set motor direction, 1 low, 2 high
    //digitalWrite(dir_b, HIGH); //Set motor direction, 3 high, 4 low
+//  
+//   analogWrite(pwm_a, 0);	
+//   analogWrite(pwm_b, 0);
+//  
+//   while (digitalRead(motor_kill));
   
-   analogWrite(pwm_a, 255);	
-   analogWrite(pwm_b, 255);
+   analogWrite(pwm_a, motor_strength);	
+   analogWrite(pwm_b, motor_strength);
 
    mouse_init();
 }
@@ -98,7 +108,7 @@ void recalc()
   x += my * sin(bearing) ;
   y += -my * cos(bearing);
   
-  x_to_travel -= abs(my * sin(bearing));
+  x_to_travel -= abs(my);
   bear_to_travel -= abs(mx/MOUSE_RADIUS);
 }
   
@@ -107,15 +117,26 @@ int i = 0;
 void loop(){
   recalc();
 
-  if ((x_to_travel <= 0 && bear_to_travel <= 0) || digitalRead(motor_kill)){
+  if ((x_to_travel <= 0 && bear_to_travel <= 0)) {// || digitalRead(motor_kill)){
     analogWrite(pwm_a, 0);	
     analogWrite(pwm_b, 0);
     
   
     if (going_forward) {
-      tryGoForward();
+      if (!force_straight) {
+        tryGoForward();
+      } else {
+        go(FORWARD);
+        force_straight = false;
+        x_to_travel = 
+      }
     } else {
-      tryGoBackward();
+      if (!force_straight) {
+        tryGoBackward();
+      } else {
+        go(BACKWARD);
+        force_straight = false;
+      }
     }
   } else {
     /*
@@ -150,12 +171,12 @@ void loop(){
 void tryGoForward() {
   if (canGo(LEFT)) {
     turn(LEFT);
-    go(FORWARD);
+    force_straight = true;
   } else if (canGo(FORWARD)) {
     go(FORWARD);
   } else if (canGo(RIGHT)) {
     turn(RIGHT);
-    go(FORWARD);
+    force_straight = true;
   } else { // Dead end
     going_forward = false;
   }
@@ -164,25 +185,28 @@ void tryGoForward() {
 void tryGoBackward() {
   if (canGo(RIGHT)) {
     turn(RIGHT);
-    go(BACKWARD);
+    force_straight = true;
   } else if (canGo(BACKWARD)) {
     go(BACKWARD);
   } else if (canGo(LEFT)) {
     turn(LEFT);
-    go(BACKWARD);
+    force_straight = true;
   } else { // Dead end
     going_forward = true;
   }
 }
 
 void go(int dir) {
-  analogWrite(pwm_a, 255);	
-  analogWrite(pwm_b, 255);
+  analogWrite(pwm_a, motor_strength);	
+  analogWrite(pwm_b, motor_strength);
   if (dir == FORWARD) {
+    Serial.println("Going Forward");
     digitalWrite(dir_a, HIGH);  //Set motor direction, 1 low, 2 high
     digitalWrite(dir_b, HIGH); //Set motor direction, 3 high, 4 low
+    
     x_to_travel = x_move;
   } else if (dir == BACKWARD) {
+    Serial.println("Going Back");
     digitalWrite(dir_a, LOW);  //Set motor direction, 1 low, 2 high
     digitalWrite(dir_b, LOW); //Set motor direction, 3 high, 4 low
     
@@ -190,18 +214,22 @@ void go(int dir) {
   } else {
     Serial.print("Invalid Direction in go()! Dir: ");
     Serial.println(dir);
-    analogWrite(pwm_a, 0  v );	
+    analogWrite(pwm_a, 0);	
     analogWrite(pwm_b, 0);
   }
 }
 
 void turn(int dir) {
+  analogWrite(pwm_a, motor_strength);	
+  analogWrite(pwm_b, motor_strength);
   if (dir == LEFT) {
+    Serial.println("Turning Left");
     digitalWrite(dir_a, LOW);  //Set motor direction, 1 low, 2 high
     digitalWrite(dir_b, HIGH); //Set motor direction, 3 high, 4 low
     
     bear_to_travel = y_move;
   } else if (dir == RIGHT) {
+    Serial.println("Turning Right");
     digitalWrite(dir_a, HIGH);  //Set motor direction, 1 low, 2 high
     digitalWrite(dir_b, LOW); //Set motor direction, 3 high, 4 low
     

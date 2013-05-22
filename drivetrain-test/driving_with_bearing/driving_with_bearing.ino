@@ -98,8 +98,8 @@ void loop(){
     digitalWrite(7, HIGH);
   */  
   } else {
-     analogWrite(pwm_a, 255 - min(max(pow(x, 1.25), 0), 150));	
-     analogWrite(pwm_b, 255 + max(min(pow(x, 1.25), 0) * 1.2, -150));	
+//     analogWrite(pwm_a, 255 - min(max(pow(x, 1.25), 0), 150));	
+//     analogWrite(pwm_b, 255 + max(min(pow(x, 1.25), 0) * 1.2, -150));	
 
     
     if (x > 0){
