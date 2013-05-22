@@ -190,7 +190,7 @@ void go(int dir) {
   } else {
     Serial.print("Invalid Direction in go()! Dir: ");
     Serial.println(dir);
-    analogWrite(pwm_a, 0  v );	
+    analogWrite(pwm_a, 0);	
     analogWrite(pwm_b, 0);
   }
 }
