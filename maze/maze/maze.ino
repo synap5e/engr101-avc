@@ -8,10 +8,10 @@
 #define BACKWARD 2
 #define RIGHT 3
 
-#define pwm_a 3  //PWM control for motor outputs 1 and 2 is on digital pin 3
-#define pwm_b 11  //PWM control for motor outputs 3 and 4 is on digital pin 11
-#define dir_a 12  //dir control for motor outputs 1 and 2 is on digital pin 12
-#define dir_b 13  //dir control for motor outputs 3 and 4 is on digital pin 13
+#define pwm_left 3  //PWM control for motor outputs 1 and 2 is on digital pin 3
+#define pwm_right 11  //PWM control for motor outputs 3 and 4 is on digital pin 11
+#define dir_left 12  //dir control for motor outputs 1 and 2 is on digital pin 12
+#define dir_right 13  //dir control for motor outputs 3 and 4 is on digital pin 13
 
 #define IRFor A0
 #define IRLef 4
@@ -26,15 +26,12 @@
 #define MOUSE_RADIUS 1835.0
 
 // The values that need to be moved for one movement/turn
-#define x_move 500
-#define y_move 132
-#define force_x_move 5000
+#define driveAmount 500
+#define turnAmount 132
 
 #define motor_strength 128
 
-PS2 mouse(MCLK, MDATA);
-
-boolean going_forward = true;   
+PS2 mouse(MCLK, MDATA);  
 
 long x = 0;
 long y = 0;   
@@ -43,7 +40,7 @@ long x_to_travel = 0;
 long bear_to_travel = 0;
 float bearing = 0.0;
 
-boolean force_straight = false;
+boolean isReversed = false;
 
 void mouse_init()
 {
@@ -59,27 +56,15 @@ void mouse_init()
 void setup(){
    Serial.begin(9600);
 
-   pinMode(pwm_a, OUTPUT);  //Set control pins to be outputs
-   pinMode(pwm_b, OUTPUT);
-   pinMode(dir_a, OUTPUT);
-   pinMode(dir_b, OUTPUT);
+   pinMode(pwm_left, OUTPUT);  //Set control pins to be outputs
+   pinMode(pwm_right, OUTPUT);
+   pinMode(dir_left, OUTPUT);
+   pinMode(dir_right, OUTPUT);
    
    pinMode(motor_kill, INPUT);
-
-   
-   pinMode(6, OUTPUT);
-   pinMode(7, OUTPUT);
-
-   //digitalWrite(dir_a, HIGH);  //Set motor direction, 1 low, 2 high
-   //digitalWrite(dir_b, HIGH); //Set motor direction, 3 high, 4 low
-//  
-//   analogWrite(pwm_a, 0);	
-//   analogWrite(pwm_b, 0);
-//  
-//   while (digitalRead(motor_kill));
   
-   analogWrite(pwm_a, motor_strength);	
-   analogWrite(pwm_b, motor_strength);
+   analogWrite(pwm_left, 0);	
+   analogWrite(pwm_right, 0);
 
    mouse_init();
 }
@@ -111,143 +96,96 @@ void recalc()
   x_to_travel -= abs(my);
   bear_to_travel -= abs(mx/MOUSE_RADIUS);
 }
-  
-int i = 0;
 
 void loop(){
-  recalc();
+  calculateMovements();
+}
 
-  if ((x_to_travel <= 0 && bear_to_travel <= 0)) {// || digitalRead(motor_kill)){
-    analogWrite(pwm_a, 0);	
-    analogWrite(pwm_b, 0);
-    
-  
-    if (going_forward) {
-      if (!force_straight) {
-        tryGoForward();
-      } else {
-        go(FORWARD);
-        force_straight = false;
-        x_to_travel = 
-      }
+void calculateMovements(){
+  if (!isReversed){ //Driving forwards
+    if (detectOpening(LEFT)){
+      turn90ThenDrive(false);
+    } else if (detectOpening(FORWARD)){
+      drive();
+    } else if (detectOpening(RIGHT)){
+      turn90ThenDrive(true);
     } else {
-      if (!force_straight) {
-        tryGoBackward();
-      } else {
-        go(BACKWARD);
-        force_straight = false;
-      }
+      isReversed = !isReversed;
     }
-  } else {
-    /*
-     analogWrite(pwm_a, 255 - min(max(pow(x, 1.25), 0), 150));	
-     analogWrite(pwm_b, 255 + max(min(pow(x, 1.25), 0) * 1.2, -150));	
+  } else { //Driving backwards
+    if (detectOpening(RIGHT)){
+      turn90ThenDrive(true);
+    } else if (detectOpening(BACKWARD)){
+      drive();
+    } else if (detectOpening(LEFT)){
+      turn90ThenDrive(false);
+    } else {
+      isReversed = !isReversed;
+    }
+  }
+}
 
-    
-    if (x > 0){
-      // too far right, turn left
-      digitalWrite(6, HIGH);
-      digitalWrite(7, LOW);
-    } else if (x < 0){
-      // too far left, turn right 
-      digitalWrite(6, LOW);
-      digitalWrite(7, HIGH);
-    }
-    */
+void turn90ThenDrive(boolean isRightSensor){
+  //Works out whether the robot should spin clockwise (equation is same as isRightSensor xor isReversed)
+  boolean clockwise = (isRightSensor != isReversed);
+  
+  //Power the motors
+  if (clockwise){
+    setMotors(motor_strength, -motor_strength);
+  } else {
+    setMotors(-motor_strength, motor_strength);
   }
   
-
-  if (i++ % 50 == 0){
-   Serial.print(x);
-   Serial.print(", ");
-   Serial.print(y); 
-   Serial.print(". Heading ");
-   Serial.println(bearing);
-   Serial.print(". Bear to travel: ");
-   Serial.println(bear_to_travel); 
+  //Wait until the robot has turned enough
+  bear_to_travel = turnAmount;
+  while (bear_to_travel > 0){
+    recalc();
   }
+  
+  drive();
 }
 
-void tryGoForward() {
-  if (canGo(LEFT)) {
-    turn(LEFT);
-    force_straight = true;
-  } else if (canGo(FORWARD)) {
-    go(FORWARD);
-  } else if (canGo(RIGHT)) {
-    turn(RIGHT);
-    force_straight = true;
-  } else { // Dead end
-    going_forward = false;
+void drive(){
+  if (!isReversed){ //Driving forwards
+    setMotors(motor_strength, motor_strength);
+  } else { //Driving backward
+    setMotors(-motor_strength, -motor_strength);
   }
+  
+  //Wait until either the robot has gone in the right direction or has run into a wall
+  x_to_travel = driveAmount;
+  while (x_to_travel > 0 && ((detectOpening(FORWARD) && !isReversed) || (detectOpening(BACKWARD) && isReversed))){
+    recalc();
+  }
+  
+  //Stop the motors
+  setMotors(0,0);
 }
 
-void tryGoBackward() {
-  if (canGo(RIGHT)) {
-    turn(RIGHT);
-    force_straight = true;
-  } else if (canGo(BACKWARD)) {
-    go(BACKWARD);
-  } else if (canGo(LEFT)) {
-    turn(LEFT);
-    force_straight = true;
-  } else { // Dead end
-    going_forward = true;
-  }
+void setMotors(int left, int right){
+  //Set the direction of each motor
+  int leftValue = HIGH; //The left wheel is driving forward
+  if (left < 0) leftValue = LOW; //The left wheel is driving backward
+  digitalWrite(dir_left, leftValue);
+  
+  int rightValue = HIGH; //The left wheel is driving forward
+  if (right < 0) rightValue = LOW; //The left wheel is driving backward
+  digitalWrite(dir_right, rightValue);
+
+  //Set the strength of the motors
+  analogWrite(pwm_left, abs(left));	
+  analogWrite(pwm_right, abs(right));
 }
 
-void go(int dir) {
-  analogWrite(pwm_a, motor_strength);	
-  analogWrite(pwm_b, motor_strength);
-  if (dir == FORWARD) {
-    Serial.println("Going Forward");
-    digitalWrite(dir_a, HIGH);  //Set motor direction, 1 low, 2 high
-    digitalWrite(dir_b, HIGH); //Set motor direction, 3 high, 4 low
-    
-    x_to_travel = x_move;
-  } else if (dir == BACKWARD) {
-    Serial.println("Going Back");
-    digitalWrite(dir_a, LOW);  //Set motor direction, 1 low, 2 high
-    digitalWrite(dir_b, LOW); //Set motor direction, 3 high, 4 low
-    
-    x_to_travel = x_move;
-  } else {
-    Serial.print("Invalid Direction in go()! Dir: ");
-    Serial.println(dir);
-    analogWrite(pwm_a, 0);	
-    analogWrite(pwm_b, 0);
-  }
-}
-
-void turn(int dir) {
-  analogWrite(pwm_a, motor_strength);	
-  analogWrite(pwm_b, motor_strength);
-  if (dir == LEFT) {
-    Serial.println("Turning Left");
-    digitalWrite(dir_a, LOW);  //Set motor direction, 1 low, 2 high
-    digitalWrite(dir_b, HIGH); //Set motor direction, 3 high, 4 low
-    
-    bear_to_travel = y_move;
-  } else if (dir == RIGHT) {
-    Serial.println("Turning Right");
-    digitalWrite(dir_a, HIGH);  //Set motor direction, 1 low, 2 high
-    digitalWrite(dir_b, LOW); //Set motor direction, 3 high, 4 low
-    
-    bear_to_travel = y_move;
-  } else {
-    Serial.print("Invalid Direction in turn()! Dir: ");
-    Serial.println(dir);
-  }
-}
-
-boolean canGo(int dir) {
-  if (dir == LEFT) {
+boolean detectOpening(int dir){
+  if (dir == LEFT) { //return whether there is a left opening
     return (digitalRead(IRLef) == HIGH);
-  } else if (dir == FORWARD) {
+  } else if (dir == FORWARD) { //return whether there is a front opening
     return (digitalRead(IRFor) == HIGH);
-  } else if (dir == RIGHT) {
+  } else if (dir == RIGHT) { //return whether there is a right opening
     return (digitalRead(IRRig) == HIGH);
-  } else if (dir == BACKWARD) {
+  } else if (dir == BACKWARD) { //return whether there is a back opening
     return (digitalRead(IRBac) == HIGH);
   }
 }
+
