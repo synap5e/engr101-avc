@@ -98,7 +98,7 @@ void recalc()
   x += my * sin(bearing) ;
   y += -my * cos(bearing);
   
-  x_to_travel -= abs(my * sin(bearing));
+  x_to_travel -= abs(my);
   bear_to_travel -= abs(mx/MOUSE_RADIUS);
 }
   
