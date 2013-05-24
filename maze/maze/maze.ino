@@ -30,6 +30,7 @@
 #define turnAmount 132
 
 #define motor_strength 128
+#define turn_strength 255
 
 PS2 mouse(MCLK, MDATA);  
 
@@ -41,6 +42,21 @@ long bear_to_travel = 0;
 float bearing = 0.0;
 
 boolean isReversed = false;
+
+struct command {
+  uint8_t left_strength;
+  uint8_t right_strength;
+  long x_to_travel;
+  long bear_to_travel;
+  command *next;
+};
+
+command FORWARD_COMMAND = {motor_strength, motor_strength, driveAmount, 0, NULL};
+command BACKWARD_COMMAND = {-motor_strength, -motor_strength, driveAmount, 0, NULL};
+command LEFT_COMMAND = {turn_strength, -turn_strength, 0, turnAmount, NULL};
+command RIGHT_COMMAND = {-turn_strength, turn_strength, 0, turnAmount, NULL};
+
+command currCommand;
 
 void mouse_init()
 {
@@ -57,7 +73,7 @@ void setup(){
    Serial.begin(9600);
 
    pinMode(pwm_left, OUTPUT);  //Set control pins to be outputs
-   pinMode(pwm_right, OUTPUT);
+   pinMode(pwm_right, OUTPUT); 
    pinMode(dir_left, OUTPUT);
    pinMode(dir_right, OUTPUT);
    
@@ -67,10 +83,11 @@ void setup(){
    analogWrite(pwm_right, 0);
 
    mouse_init();
+   
+   currCommand = FORWARD_COMMAND;
 }
-
-void recalc()
-{
+   
+void recalc() {
   char mstat;
   char mx;
   char my;
@@ -93,12 +110,19 @@ void recalc()
   x += my * sin(bearing) ;
   y += -my * cos(bearing);
   
-  x_to_travel -= abs(my);
-  bear_to_travel -= abs(mx/MOUSE_RADIUS);
+  currCommand.x_to_travel -= abs(my);
+  currCommand.bear_to_travel -= abs(mx/MOUSE_RADIUS);
 }
 
 void loop(){
-  calculateMovements();
+  if (currCommand.x_to_travel <= 0 || currCommand.bear_to_travel <= 0 && ((detectOpening(FORWARD) && !isReversed) || (detectOpening(BACKWARD) && isReversed))) {
+    if (currCommand.next) { // If there is a next command
+     currCommand = *currCommand.next;
+    } else {
+     calculateMovements();
+    }
+    setMotors(currCommand.left_strength, currCommand.right_strength);
+  }
 }
 
 void calculateMovements(){
@@ -125,15 +149,18 @@ void calculateMovements(){
   }
 }
 
+/*
 void turn90ThenDrive(boolean isRightSensor){
   //Works out whether the robot should spin clockwise (equation is same as isRightSensor xor isReversed)
   boolean clockwise = (isRightSensor != isReversed);
   
+  
+  
   //Power the motors
   if (clockwise){
-    setMotors(motor_strength, -motor_strength);
+    setMotors(turn_strength, -turn_strength);
   } else {
-    setMotors(-motor_strength, motor_strength);
+    setMotors(-turn_strength, turn_strength);
   }
   
   //Wait until the robot has turned enough
@@ -143,23 +170,37 @@ void turn90ThenDrive(boolean isRightSensor){
   }
   
   drive();
+} */
+
+void turn90ThenDrive(boolean isRightSensor){
+  //Works out whether the robot should spin clockwise (equation is same as isRightSensor xor isReversed)
+  boolean clockwise = (isRightSensor != isReversed);
+  
+  command back, turn, forw;
+  back = BACKWARD_COMMAND;
+  back.x_to_travel = driveAmount*10;
+  
+  if (clockwise){
+    turn = LEFT_COMMAND;
+  } else {
+    turn = RIGHT_COMMAND;
+  }
+  
+  forw = FORWARD_COMMAND;
+  forw.x_to_travel = driveAmount*10;
+  
+  back.next = &turn;
+  turn.next = &forw;
+  
+  currCommand = back;
 }
 
 void drive(){
-  if (!isReversed){ //Driving forwards
-    setMotors(motor_strength, motor_strength);
-  } else { //Driving backward
-    setMotors(-motor_strength, -motor_strength);
+  if (isReversed) {
+    currCommand = BACKWARD_COMMAND;
+  } else {
+    currCommand = FORWARD_COMMAND;
   }
-  
-  //Wait until either the robot has gone in the right direction or has run into a wall
-  x_to_travel = driveAmount;
-  while (x_to_travel > 0 && ((detectOpening(FORWARD) && !isReversed) || (detectOpening(BACKWARD) && isReversed))){
-    recalc();
-  }
-  
-  //Stop the motors
-  setMotors(0,0);
 }
 
 void setMotors(int left, int right){
