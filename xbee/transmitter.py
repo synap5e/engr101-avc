@@ -57,7 +57,7 @@ while not done:
       power_r = 255
       if K_q in keys_held:
          # left forward
-         direction |= 1 << 1
+         direction |= 1 << 4
       elif K_a in keys_held:
          # left back
          pass
@@ -65,7 +65,7 @@ while not done:
          power_l = 0
       if K_e in keys_held:
          # right forward
-         direction |= 1
+         direction |= 1 << 3
       elif K_d in keys_held:
          # right back
          pass
