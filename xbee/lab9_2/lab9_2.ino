@@ -57,9 +57,9 @@ void SendToZB(){
   frame_to_ZB[7] = 0xA2;
   frame_to_ZB[8] = 0x00;
   frame_to_ZB[9] = 0x40;
-  frame_to_ZB[10] = 0x63;
-  frame_to_ZB[11] = 0x47;
-  frame_to_ZB[12] = 0x1C;
+  frame_to_ZB[10] = 0x8B;
+  frame_to_ZB[11] = 0x8B;
+  frame_to_ZB[12] = 0x5B;
   // destination 16 bit address - broadcast
   frame_to_ZB[13] = 0xFF;
   frame_to_ZB[14] = 0xFE;
