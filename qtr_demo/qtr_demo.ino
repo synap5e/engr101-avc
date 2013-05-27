@@ -33,6 +33,7 @@
 
 #define FAST_SPEED 120
 #define SLOW_SPEED 60
+#define MID_SPEED 90
 #define THRESHOLD 1000
 
 // sensors 0 through 7 are connected to digital pins 3 through 10, respectively
@@ -163,13 +164,17 @@ void loop()
     Serial.println("Line lost");
     if(lastTurnedLeft){
       Serial.print("lost line - Go right");
-      analogWrite(pwm_a, 0);	 
-      analogWrite(pwm_b, 0);
+      analogWrite(pwm_a, FAST_SPEED);	 
+      analogWrite(pwm_b, SLOW_SPEED);
+      analogWrite(pwm_a, MID_SPEED);
+      analogWrite(pwm_b, FAST_SPEED);
     }
     else {
       Serial.print("lost line - Go left");
       analogWrite(pwm_a, SLOW_SPEED);	
       analogWrite(pwm_b, FAST_SPEED);
+      analogWrite(pwm_a, FAST_SPEED);	 
+      analogWrite(pwm_b, MID_SPEED);
     }
   }
   
