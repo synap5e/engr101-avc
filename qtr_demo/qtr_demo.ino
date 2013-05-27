@@ -32,7 +32,7 @@
 #define debug
 
 #define FAST_SPEED 120
-#define SLOW_SPEED 60
+#define SLOW_SPEED 80
 #define MID_SPEED 90
 #define THRESHOLD 1000
 
@@ -92,6 +92,7 @@ void setup()
 }
 
 bool lastTurnedLeft = false;
+bool lineLost = false;
 
 void loop()
 {
@@ -141,7 +142,20 @@ void loop()
 
   if (mini < THRESHOLD){
     Serial.println("Have a line");
-    if (mini == ave_left){ 
+    if (lineLost == true){
+       if (lastTurnedLeft == true){
+         analogWrite(pwm_a, SLOW_SPEED);	
+         analogWrite(pwm_b, FAST_SPEED);
+         lineLost = false;
+        }
+        else if(lastTurnedLeft == false){
+          analogWrite(pwm_a, FAST_SPEED);	 
+          analogWrite(pwm_b, SLOW_SPEED);
+        }
+       lineLost = false;
+       delay(1000);
+      }
+    else if (mini == ave_left){ 
       Serial.print("Go left");
       analogWrite(pwm_a, SLOW_SPEED);	
       analogWrite(pwm_b, FAST_SPEED);
@@ -151,7 +165,8 @@ void loop()
       Serial.print("Go forward");
       analogWrite(pwm_a, FAST_SPEED);	
       analogWrite(pwm_b, FAST_SPEED);
-    } 
+
+    }
 
     else{
       Serial.print("Go right");
@@ -161,20 +176,22 @@ void loop()
     }
 
   } else {
+    lineLost = true;
+    
     Serial.println("Line lost");
     if(lastTurnedLeft){
       Serial.print("lost line - Go right");
       analogWrite(pwm_a, FAST_SPEED);	 
       analogWrite(pwm_b, SLOW_SPEED);
-      analogWrite(pwm_a, MID_SPEED);
-      analogWrite(pwm_b, FAST_SPEED);
+
+
     }
     else {
       Serial.print("lost line - Go left");
       analogWrite(pwm_a, SLOW_SPEED);	
       analogWrite(pwm_b, FAST_SPEED);
-      analogWrite(pwm_a, FAST_SPEED);	 
-      analogWrite(pwm_b, MID_SPEED);
+
+
     }
   }
   
