@@ -25,7 +25,12 @@ from pygame.locals import *
 
 
 def crc(packet):
-   return 0xff
+   crc = 0;
+   for byte in packet[3:]:
+      crc = (crc + byte) % 0xFFFF
+   crc &= 0xFF
+   crc = 0xFF - crc
+   return crc
  
 pygame.init()
 screen = pygame.display.set_mode((640, 480))
