@@ -1,0 +1,5 @@
+packet = {
+	directions 		=> left_forwards = (directions>>1), right_forwards = (directions & 1) 
+	left_speed 		=> 0-255
+	right_speed		=> 0-255
+}
