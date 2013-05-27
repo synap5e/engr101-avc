@@ -1,5 +1,14 @@
 #!/usr/bin/env python 
 timeout = 500 
+packet_header = [
+0x7E, 						# delimiter
+0x00, 0x11, 					# length
+0x10, 0x00, 					# API ID
+0x00, 0x13, 0xA2, 0x00, 0x40, 0x63, 0x47, 0x1C,	# destination 64 bit address - broadcast
+0xFF, 0xFE,					# destination 16 bit address - broadcast
+0x00,						# number of hops
+0x01						# option
+]
 
 import sys
 
@@ -13,11 +22,15 @@ port = serial.Serial(port=sys.argv[1], baudrate=9600)
 
 import pygame, copy, time
 from pygame.locals import *
+
+
+def crc(packet):
+   return 0xff
  
 pygame.init()
 screen = pygame.display.set_mode((640, 480))
 pygame.display.set_caption('AVC')
- 
+
 done = False
 keys_held = set()
 last_keys_held = set()
@@ -53,7 +66,9 @@ while not done:
          pass
       else:
          power_r = 0
-      port.write(bytearray([direction, power_l, power_r]))
-      print "%x %x %x" % (direction, power_l, power_r)
+      packet = packet_header + [direction, power_l, power_r]
+      packet += [crc(packet)]
+      port.write(bytearray(packet))
+      print packet
 port.close()
 
