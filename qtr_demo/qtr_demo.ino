@@ -33,7 +33,7 @@
 
 #define FAST_SPEED 120
 #define SLOW_SPEED 80
-#define MID_SPEED 90
+#define SUPERSLOW_SPEED 60
 #define THRESHOLD 1000
 
 // sensors 0 through 7 are connected to digital pins 3 through 10, respectively
@@ -153,12 +153,16 @@ void loop()
           analogWrite(pwm_b, SLOW_SPEED);
         }
        lineLost = false;
-       delay(1000);
+       delay(2000);
       }
     else if (mini == ave_left){ 
       Serial.print("Go left");
-      analogWrite(pwm_a, SLOW_SPEED);	
-      analogWrite(pwm_b, FAST_SPEED);
+      if (sensorValues[0] < sensorValues[1]){
+      analogWrite(pwm_a, SUPERSLOW_SPEED);	 
+      analogWrite(pwm_b, FAST_SPEED);}
+      else{
+      analogWrite(pwm_a, SLOW_SPEED);	 
+      analogWrite(pwm_b, FAST_SPEED);} 
       lastTurnedLeft = true;
     }
     else if (mini == ave_mid){
@@ -170,8 +174,12 @@ void loop()
 
     else{
       Serial.print("Go right");
+      if (sensorValues[5] < sensorValues[4]){
       analogWrite(pwm_a, FAST_SPEED);	 
-      analogWrite(pwm_b, SLOW_SPEED);
+      analogWrite(pwm_b, SUPERSLOW_SPEED);}
+      else{
+      analogWrite(pwm_a, FAST_SPEED);	 
+      analogWrite(pwm_b, SLOW_SPEED);} 
       lastTurnedLeft = false;
     }
 
