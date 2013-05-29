@@ -23,14 +23,14 @@ joystick.init()
 while done==False:
     for event in pygame.event.get(): # User did something
         if event.type == pygame.QUIT: # If user clicked close
-            done=True # Flag that we are done so we exit this loop
+			done=True # Flag that we are done so we exit this loop
+#
+    joystick_count = pygame.joystick.get_count()
 
-	joystick_count = pygame.joystick.get_count()
-
-	print "%s\t%s" % (round(joystick.get_axis(1), 3), round(joystick.get_axis(2), 3))
+    print "%s\t%s" % (round(joystick.get_axis(1), 1), round(joystick.get_axis(2), 1))
 
     # Limit to 10 updates per second
-    clock.tick(10)
+    #clock.tick(10)
     
 # Close the window and quit.
 # If you forget this line, the program will 'hang'
