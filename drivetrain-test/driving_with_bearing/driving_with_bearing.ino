@@ -9,7 +9,7 @@
 #define dir_a 12  //dir control for motor outputs 1 and 2 is on digital pin 12
 #define dir_b 13  //dir control for motor outputs 3 and 4 is on digital pin 13
 
-#define motor_kill 2
+#define motor_kill 4
 /*
  * The distance from the mouse to the axis of rotation
  * The units are the units used by the mouse
@@ -31,7 +31,9 @@ void mouse_init()
 
 void setup(){
    Serial.begin(9600);
+   Serial.println("PUFF 0.7.2 bootstrap initiated");
 
+   
    pinMode(pwm_a, OUTPUT);  //Set control pins to be outputs
    pinMode(pwm_b, OUTPUT);
    pinMode(dir_a, OUTPUT);
@@ -46,10 +48,22 @@ void setup(){
    digitalWrite(dir_a, HIGH);  //Set motor direction, 1 low, 2 high
    digitalWrite(dir_b, HIGH); //Set motor direction, 3 high, 4 low
   
-   analogWrite(pwm_a, 255);	
-   analogWrite(pwm_b, 255);
+   analogWrite(pwm_a, 0);	
+   analogWrite(pwm_b, 0);
+
+   
+   Serial.print("Waiting for kill switch... ");
+   while(!digitalRead(motor_kill));
+   Serial.println("done");
+
+   Serial.print("Bringing up mouse... ");
 
    mouse_init();
+   
+   Serial.println("done");
+   
+   analogWrite(pwm_a, 255);	
+   analogWrite(pwm_b, 255);
 }
 
 long x = 0;
@@ -87,7 +101,7 @@ long distance = 200000;
 void loop(){
   recalc();
 
-  if (y > distance || digitalRead(motor_kill)){
+  if (y > distance || !digitalRead(motor_kill)){
     analogWrite(pwm_a, 0);	
     analogWrite(pwm_b, 0);
  /* } else if ((abs(bearing) < 0.15) && (abs(x) < 50)){
@@ -98,8 +112,8 @@ void loop(){
     digitalWrite(7, HIGH);
   */  
   } else {
-//     analogWrite(pwm_a, 255 - min(max(pow(x, 1.25), 0), 150));	
-//     analogWrite(pwm_b, 255 + max(min(pow(x, 1.25), 0) * 1.2, -150));	
+     analogWrite(pwm_a, 255 - min(max(pow(x, 1.25), 0), 150));	
+     analogWrite(pwm_b, 255 + max(min(pow(x, 1.25), 0) * 1.2, -150));	
 
     
     if (x > 0){
