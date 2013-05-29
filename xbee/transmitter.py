@@ -10,11 +10,19 @@ packet_header = [
 0x01						# option
 ]
 
+def crc(packet):
+	crc = 0;
+	for byte in packet[3:]:
+		crc = (crc + byte) % 0xFFFF
+	crc &= 0xFF
+	crc = 0xFF - crc
+	return crc
+
 import sys
 
 if not len(sys.argv) > 1 :
-   print "usage %s <serial port>" % (sys.argv[0])
-   sys.exit()
+	print "usage %s <serial port>" % (sys.argv[0])
+	sys.exit(-1)
 
 import serial
 port = serial.Serial(port=sys.argv[1], baudrate=9600)
@@ -22,58 +30,55 @@ port = serial.Serial(port=sys.argv[1], baudrate=9600)
 
 import pygame, copy, time
 from pygame.locals import *
+ 
+pygame.joystick.init()
+if not pygame.joystick.get_count():
+	print "No joystick found"
+	sys.exit(-2)
 
-
-def crc(packet):
-   crc = 0;
-   for byte in packet[3:]:
-      crc = (crc + byte) % 0xFFFF
-   crc &= 0xFF
-   crc = 0xFF - crc
-   return crc
+joystick = pygame.joystick.Joystick(0)
+joystick.init()
  
 pygame.init()
 screen = pygame.display.set_mode((640, 480))
 pygame.display.set_caption('AVC')
 
 done = False
-keys_held = set()
-last_keys_held = set()
 lasttime = 0
+lastValues = [0, 0]
 while not done:
-   for event in pygame.event.get():
-      if (event.type == KEYDOWN):
-         if (event.key == K_ESCAPE):
-            done = True
-         keys_held.add(event.key)
-      elif (event.type == KEYUP):
-         keys_held.remove(event.key)
-   millis = int(round(time.time() * 1000))
-   if not keys_held == last_keys_held or millis - lasttime > timeout:
-      lasttime = millis
-      last_keys_held = copy.deepcopy(keys_held)
-      direction = 0;
-      power_l = 255
-      power_r = 255
-      if K_q in keys_held:
-         # left forward
-         direction |= 1 << 4
-      elif K_a in keys_held:
-         # left back
-         pass
-      else:
-         power_l = 0
-      if K_e in keys_held:
-         # right forward
-         direction |= 1 << 3
-      elif K_d in keys_held:
-         # right back
-         pass
-      else:
-         power_r = 0
-      packet = packet_header + [direction, power_l, power_r]
-      packet += [crc(packet)]
-      port.write(bytearray(packet))
-      print packet
+	for event in pygame.event.get():
+		if ((event.type == KEYDOWN and event.key == K_ESCAPE) or event.type == pygame.QUIT):
+			done = True
+	millis = int(round(time.time() * 1000))
+	values = [round(joystick.get_axis(1), 1), round(joystick.get_axis(2), 1)]
+	if not lastValues == values or millis - lasttime > timeout:
+		lasttime = millis
+		lastValues = copy.deepcopy(values)
+		direction = 0
+		power_l = int(255 * abs(values[0]))
+		power_r = int(255 * abs(values[1]))
+		if values[0] < -0.1:
+			# left forward
+			direction |= 1 << 4
+		elif values[0] > 0.1:
+			# left back
+			pass
+		else:
+			power_l = 0
+		if values[1] < -0.1:
+			# right forward
+			direction |= 1 << 3
+		elif values[1] > 0.1:
+			# right back
+			pass
+		else:
+			power_r = 0
+		payload = [direction, power_l, power_r]
+		packet = packet_header + payload
+		crcVal = crc(packet)
+		packet += [crcVal]
+		port.write(bytearray(packet))
+		print "%s  crc: %d" % (payload, crcVal)
 port.close()
 
