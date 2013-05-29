@@ -17,6 +17,11 @@ struct xbee_packet {
   uint8_t calculated_crc;
 };
 
+#define pwm_left 3  //PWM control for motor outputs 1 and 2 is on digital pin 3
+#define pwm_right 11  //PWM control for motor outputs 3 and 4 is on digital pin 11
+#define dir_left 12  //dir control for motor outputs 1 and 2 is on digital pin 12
+#define dir_right 13  //dir control for motor outputs 3 and 4 is on digital pin 13
+
 xbee_packet* pack = NULL;
 int packetIndex;
 unsigned int check_sum_total;
@@ -26,6 +31,15 @@ void packetReceived();
 void setup() {
   Serial.begin(9600);
   xBeeSerial.begin(9600);
+  
+
+   pinMode(pwm_left, OUTPUT);  //Set control pins to be outputs
+   pinMode(pwm_right, OUTPUT);
+   pinMode(dir_left, OUTPUT);
+   pinMode(dir_right, OUTPUT);
+  
+   analogWrite(pwm_left, 0);	
+   analogWrite(pwm_right, 0);
 }
 
 
@@ -37,7 +51,6 @@ void loop() {
   {
     inByte = xBeeSerial.read();
     #ifdef debug
-    Serial.println();
     Serial.print(inByte, HEX);
     #endif
     if (inByte == 0x7E && pack == NULL)
@@ -46,7 +59,7 @@ void loop() {
       Serial.println(" is header");
       #endif
       pack = (xbee_packet*)malloc(sizeof(xbee_packet));
-      if (pack->data == NULL){
+      if (pack == NULL){
            #ifdef debug_errors
            Serial.println("! DROPPING PACKET - MALLOC FOR PACKET FAILED");
            #endif
@@ -71,7 +84,7 @@ void loop() {
       Serial.println(" is length");
       #endif
     } 
-    else if ((packetIndex) >= 16 && packetIndex < pack->length+2)
+    else if ((packetIndex) >= 14 && packetIndex < pack->length+2)
     {
       #ifdef debug
       Serial.println(" is data");
@@ -89,7 +102,7 @@ void loop() {
            pack = NULL;
            return;
         }
-        pack->data = (uint8_t*)malloc((pack->length - 14) * sizeof(uint8_t));
+        pack->data = (uint8_t*)malloc((pack->length - 12) * sizeof(uint8_t));
         if (pack->data == NULL){
            #ifdef debug_errors
            Serial.println("! DROPPING PACKET - MALLOC FOR DATA ARRAY FAILED");
@@ -99,7 +112,7 @@ void loop() {
            return;
         }
       } 
-      pack->data[packetIndex-16] = inByte;
+      pack->data[packetIndex-14] = inByte;
     }
     else if (packetIndex == pack->length+2)
     {
@@ -111,7 +124,7 @@ void loop() {
       pack->calculated_crc = 0xFF - (check_sum_total & 0xFF);
             
       // The receiver of the packet only wants the length of the usefull data
-      pack->length -= 14;
+      pack->length -= 12;
       packetReceived();
       free(pack->data);
       free(pack);
