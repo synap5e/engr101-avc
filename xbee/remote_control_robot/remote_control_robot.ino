@@ -57,7 +57,6 @@ void loop() {
   {
     inByte = xBeeSerial.read();
     #ifdef debug
-    Serial.println();
     Serial.print(inByte, HEX);
     #endif
     if (inByte == 0x7E && pack == NULL)
@@ -66,7 +65,7 @@ void loop() {
       Serial.println(" is header");
       #endif
       pack = (xbee_packet*)malloc(sizeof(xbee_packet));
-      if (pack->data == NULL){
+      if (pack == NULL){
            #ifdef debug_errors
            Serial.println("! DROPPING PACKET - MALLOC FOR PACKET FAILED");
            #endif
@@ -91,11 +90,12 @@ void loop() {
       Serial.println(" is length");
       #endif
     } 
-    else if ((packetIndex) >= 16 && packetIndex < pack->length+2)
+    else if ((packetIndex) >= 14 && packetIndex < pack->length+2)
     {
       #ifdef debug
       Serial.println(" is data");
       #endif
+      
       check_sum_total += inByte;
       
       if (pack->data == NULL)
@@ -108,7 +108,7 @@ void loop() {
            pack = NULL;
            return;
         }
-        pack->data = (uint8_t*)malloc((pack->length - 14) * sizeof(uint8_t));
+        pack->data = (uint8_t*)malloc((pack->length - 12) * sizeof(uint8_t));
         if (pack->data == NULL){
            #ifdef debug_errors
            Serial.println("! DROPPING PACKET - MALLOC FOR DATA ARRAY FAILED");
@@ -118,7 +118,7 @@ void loop() {
            return;
         }
       } 
-      pack->data[packetIndex-16] = inByte;
+      pack->data[packetIndex-14] = inByte;
     }
     else if (packetIndex == pack->length+2)
     {
@@ -130,7 +130,7 @@ void loop() {
       pack->calculated_crc = 0xFF - (check_sum_total & 0xFF);
             
       // The receiver of the packet only wants the length of the usefull data
-      pack->length -= 14;
+      pack->length -= 12;
       packetReceived();
       free(pack->data);
       free(pack);
@@ -143,20 +143,15 @@ void loop() {
       
       check_sum_total += inByte;
     }
-
+    
     packetIndex++;
 
-  }
-
-  if (millis() > timeout)
-  {
-    analogWrite(pwm_left, 0);	
-    analogWrite(pwm_right, 0);
   }
 
 }
 
 void packetReceived(){
+  
   if (pack->crc == pack->calculated_crc && pack->length == 3)
   {
      timeout = millis() + 500;
@@ -178,9 +173,6 @@ void packetReceived(){
      digitalWrite(dir_left, right_forwards);
      digitalWrite(pwm_left, left_speed);
      digitalWrite(pwm_right, right_speed);
-    
-
-  
 
   }
 
