@@ -59,21 +59,17 @@ while not done:
 		power_l = int(255 * abs(values[0]))
 		power_r = int(255 * abs(values[1]))
 		if values[0] < -0.1:
-			print "left forward"
 			# left forward
 			direction |= 1 << 4
 		elif values[0] > 0.1:
-			print "left back"
 			# left back
 			pass
 		else:
 			power_l = 0
 		if values[1] < -0.1:
-			print "right forward"
 			# right forward
 			direction |= 1 << 3
 		elif values[1] > 0.1:
-			print "right back"
 			# right back
 			pass
 		else:
