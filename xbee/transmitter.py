@@ -3,8 +3,9 @@ timeout = 500
 packet_header = [
 0x7E, 						# delimiter
 0x00, 0x11, 					# length
-0x10, 0x00, 					# API ID
-0x00, 0x13, 0xA2, 0x00, 0x40, 0x6A, 0x41, 0xA8,	# destination 64 bit address - broadcast
+0x10, 0x00, 					
+# API ID
+0x00, 0x13, 0xA2, 0x00, 0x40, 0x7C, 0x73, 0xD2,	# destination 64 bit address - broadcast
 0xFF, 0xFE,					# destination 16 bit address - broadcast
 0x00,						# number of hops
 0x01						# option
@@ -56,24 +57,24 @@ while not done:
 		lasttime = millis
 		lastValues = copy.deepcopy(values)
 		direction = 0
-		power_l = int(255 * abs(values[0]))
-		power_r = int(255 * abs(values[1]))
+		power_l = int(255 * abs(values[1]))
+		power_r = int(255 * abs(values[0]))
 		if values[0] < -0.1:
 			# left forward
-			direction |= 1 << 4
+			direction |= 1 << 3
 		elif values[0] > 0.1:
 			# left back
 			pass
 		else:
-			power_l = 0
+			power_r = 0
 		if values[1] < -0.1:
 			# right forward
-			direction |= 1 << 3
+			direction |= 1 << 4
 		elif values[1] > 0.1:
 			# right back
 			pass
 		else:
-			power_r = 0
+			power_l = 0
 		payload = [direction, power_l, power_r]
 		packet = packet_header + payload
 		crcVal = crc(packet)
