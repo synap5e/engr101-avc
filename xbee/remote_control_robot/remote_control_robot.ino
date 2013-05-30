@@ -171,9 +171,10 @@ void packetReceived(){
 
      digitalWrite(dir_right, left_forwards);
      digitalWrite(dir_left, right_forwards);
-     digitalWrite(pwm_left, left_speed);
-     digitalWrite(pwm_right, right_speed);
-
+     analogWrite(pwm_left, left_speed);
+     analogWrite(pwm_right, right_speed);
+     
+     
   }
 
 
