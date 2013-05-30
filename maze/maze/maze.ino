@@ -28,10 +28,10 @@
 
 // The values that need to be moved for one movement/turn
 #define driveAmount 500
-#define turnAmount 120
+#define turnAmount 140
 
-#define motor_strength 128
-#define turn_strength 255
+#define motor_strength 128*0.8
+#define turn_strength 155
 
 PS2 mouse(MCLK, MDATA);  
 
@@ -138,9 +138,9 @@ void calculateMovements(){
 }
 
 void turn90ThenDrive(boolean isRightSensor){
-  //isReversed = !isReversed;
-  //drive(2000);
-  //isReversed = !isReversed;
+  isReversed = !isReversed;
+  drive(driveAmount*2);
+  isReversed = !isReversed;
   
   //Works out whether the robot should spin clockwise (equation is same as isRightSensor xor isReversed)
   boolean clockwise = (isRightSensor != isReversed);
@@ -149,7 +149,7 @@ void turn90ThenDrive(boolean isRightSensor){
   if (clockwise){
     setMotors(turn_strength, -turn_strength/2);
   } else {
-    setMotors(-turn_strength/2, turn_strength);
+    setMotors(-turn_strength/3, turn_strength/2);
   }
   
   //Wait until the robot has turned enough
