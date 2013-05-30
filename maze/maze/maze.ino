@@ -14,8 +14,9 @@
 #define dir_right 13  //dir control for motor outputs 3 and 4 is on digital pin 13
 
 #define IRFor 7
-#define IRLef 4
-#define IRBac 5
+#define IRLefFro 5
+#define IRLefBac 2
+#define IRBac 4
 #define IRRig 6
 
 #define motor_kill 2
@@ -27,10 +28,10 @@
 
 // The values that need to be moved for one movement/turn
 #define driveAmount 500
-#define turnAmount 120
+#define turnAmount 140
 
-#define motor_strength 128
-#define turn_strength 255
+#define motor_strength 128*0.8
+#define turn_strength 155
 
 PS2 mouse(MCLK, MDATA);  
 
@@ -99,6 +100,7 @@ void recalc()
   x_to_travel -= abs(my);
   bear_to_travel -= abs(mx/MOUSE_RADIUS);
   
+  //delay(500);
   //x_to_travel = 0;
   //bear_to_travel = 0;
 }
@@ -110,13 +112,17 @@ void loop(){
 void calculateMovements(){
   if (!isReversed){ //Driving forwards
     if (detectOpening(LEFT)){
+      Serial.println("Going left");
       turn90ThenDrive(false);
     } else if (detectOpening(FORWARD)){
+      Serial.println("Going forward");
       drive(driveAmount);
     } else if (detectOpening(RIGHT)){
+      Serial.println("Going right");
       turn90ThenDrive(true);
     } else {
-      isReversed = !isReversed;
+      Serial.println("Stopped");
+      //isReversed = !isReversed;
     }
   } else { //Driving backwards
     if (detectOpening(RIGHT)){
@@ -133,7 +139,7 @@ void calculateMovements(){
 
 void turn90ThenDrive(boolean isRightSensor){
   isReversed = !isReversed;
-  drive(2000);
+  drive(driveAmount*2);
   isReversed = !isReversed;
   
   //Works out whether the robot should spin clockwise (equation is same as isRightSensor xor isReversed)
@@ -141,9 +147,9 @@ void turn90ThenDrive(boolean isRightSensor){
   
   //Power the motors
   if (clockwise){
-    setMotors(turn_strength, turn_strength/2);
+    setMotors(turn_strength, -turn_strength/2);
   } else {
-    setMotors(turn_strength/2, turn_strength);
+    setMotors(-turn_strength/3, turn_strength/2);
   }
   
   //Wait until the robot has turned enough
@@ -152,7 +158,7 @@ void turn90ThenDrive(boolean isRightSensor){
     recalc();
   }
   
-  drive(driveAmount);
+  drive(driveAmount*10);
 }
 
 void drive(int distance){
@@ -182,25 +188,6 @@ void setMotors(int left, int right){
   if (right < 0) rightValue = LOW; //The left wheel is driving backward
   digitalWrite(dir_right, rightValue);
 
-  /*
-  Serial.print("Openings L: ");
-  Serial.print(detectOpening(LEFT));
-  Serial.print(" F: ");
-  Serial.print(detectOpening(FORWARD));
-  Serial.print(" R: ");
-  Serial.print(detectOpening(RIGHT));
-  Serial.print(" B: ");
-  Serial.println(detectOpening(BACKWARD));
-  
-   Serial.print("Motors L: ");
-  Serial.print(left);
-  Serial.print(" R: ");
-  Serial.println(right);
-  
-  left = 0;
-  right = 0;
-  */
-
   //Set the strength of the motors
   analogWrite(pwm_left, abs(left));	
   analogWrite(pwm_right, abs(right));
@@ -208,12 +195,13 @@ void setMotors(int left, int right){
 
 boolean detectOpening(int dir){
   if (dir == LEFT) { //return whether there is a left opening
-    return (digitalRead(IRLef) == HIGH);
+    return (digitalRead(IRLefFro) == HIGH && digitalRead(IRLefBac) == HIGH);
   } else if (dir == FORWARD) { //return whether there is a front opening
     return (digitalRead(IRFor) == HIGH);
   } else if (dir == RIGHT) { //return whether there is a right opening
     return (digitalRead(IRRig) == HIGH);
   } else if (dir == BACKWARD) { //return whether there is a back opening
+    return true;
     return (digitalRead(IRBac) == HIGH);
   }
 }
