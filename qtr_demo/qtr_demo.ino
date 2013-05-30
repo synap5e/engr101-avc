@@ -142,21 +142,18 @@ void loop()
 
   if (mini < THRESHOLD){
     Serial.println("Have a line");
-      
+
     if (mini == ave_left){ 
       Serial.print("Go left");
       if (sensorValues[0] + 200 < sensorValues[1]){
-        analogWrite(pwm_a, SUPERSLOW_SPEED);	 
-        analogWrite(pwm_b, FAST_SPEED);
+        setMotors(SUPERSLOW_SPEED, FAST_SPEED);
       }
       else{
-        analogWrite(pwm_a, SLOW_SPEED);	 
-        analogWrite(pwm_b, FAST_SPEED);
+        setMotors(SLOW_SPEED, FAST_SPEED);
       } 
       lastTurnedLeft = true;
       if (lineLost == true){
-        analogWrite(pwm_a, FAST_SPEED);	 
-        analogWrite(pwm_b, SLOW_SPEED);
+        setMotors(FAST_SPEED, SLOW_SPEED);
         lineLost = false;
         lastTurnedLeft = false;
         delay(2000);
@@ -164,17 +161,14 @@ void loop()
     }
     else if (mini == ave_mid){
       Serial.print("Go forward");
-      analogWrite(pwm_a, FAST_SPEED);	
-      analogWrite(pwm_b, FAST_SPEED);
+      setMotors(FAST_SPEED, FAST_SPEED);;
       if (lineLost == true){
         if (lastTurnedLeft == true){
-          analogWrite(pwm_a, SLOW_SPEED);	
-          analogWrite(pwm_b, FAST_SPEED);
+          setMotors(SLOW_SPEED, FAST_SPEED);
           lineLost = false;
         }
         else if(lastTurnedLeft == false){
-          analogWrite(pwm_a, FAST_SPEED);	 
-          analogWrite(pwm_b, SLOW_SPEED);
+          setMotors(FAST_SPEED, SLOW_SPEED);
         }
         lineLost = false;
         delay(2000);
@@ -183,39 +177,32 @@ void loop()
     else {
       Serial.print("Go right");
       if (sensorValues[5] < sensorValues[4]){
-        analogWrite(pwm_a, FAST_SPEED);	 
-        analogWrite(pwm_b, SUPERSLOW_SPEED);
+        setMotors(FAST_SPEED, SUPERSLOW_SPEED);
       }
       else{
-        analogWrite(pwm_a, FAST_SPEED);	 
-        analogWrite(pwm_b, SLOW_SPEED);
+        setMotors(FAST_SPEED, SLOW_SPEED);
       } 
       lastTurnedLeft = false;
       if (lineLost == true){
-        analogWrite(pwm_a, SLOW_SPEED);	
-        analogWrite(pwm_b, FAST_SPEED);
+        setMotors(SLOW_SPEED, FAST_SPEED);
         lineLost = false;
         lastTurnedLeft = true;
         delay(2000);
       }
     }
   }
-  
+
 
   else{
     Serial.println("Line lost");
     if(lastTurnedLeft){
       Serial.print("lost line - Go right");
-      analogWrite(pwm_a, FAST_SPEED);	 
-      analogWrite(pwm_b, SLOW_SPEED);
+      setMotors(FAST_SPEED, SLOW_SPEED);
     }
 
     else {
       Serial.print("lost line - Go left");
-      analogWrite(pwm_a, SLOW_SPEED);	
-      analogWrite(pwm_b, FAST_SPEED);
-
-
+      setMotors(SLOW_SPEED, FAST_SPEED);
     }
   }
 
@@ -225,6 +212,21 @@ void loop()
   Serial.println();
 
   delay(100);
+}
+
+void setMotors(int left, int right){
+  //Set the direction of each motor
+  int leftValue = HIGH; //The left wheel is driving forward
+  if (left < 0) leftValue = LOW; //The left wheel is driving backward
+  digitalWrite(dir_left, leftValue);
+
+  int rightValue = HIGH; //The left wheel is driving forward
+  if (right < 0) rightValue = LOW; //The left wheel is driving backward
+  digitalWrite(dir_right, rightValue);
+
+  //Set the strength of the motors
+  analogWrite(pwm_a, abs(left));	
+  analogWrite(pwm_b, abs(right));
 }
 
 
