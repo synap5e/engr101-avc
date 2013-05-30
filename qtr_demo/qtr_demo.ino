@@ -145,7 +145,7 @@ void loop()
       
     if (mini == ave_left){ 
       Serial.print("Go left");
-      if (sensorValues[0] < sensorValues[1]){
+      if (sensorValues[0] + 200 < sensorValues[1]){
         analogWrite(pwm_a, SUPERSLOW_SPEED);	 
         analogWrite(pwm_b, FAST_SPEED);
       }
@@ -196,9 +196,7 @@ void loop()
         analogWrite(pwm_b, FAST_SPEED);
         lineLost = false;
         lastTurnedLeft = true;
-        lineLost = false;
         delay(2000);
-        lineLost = true;
       }
     }
   }
