@@ -14,9 +14,9 @@
 #define dir_right 13  //dir control for motor outputs 3 and 4 is on digital pin 13
 
 #define IRFor 7
-#define IRLefFro 4
+#define IRLefFro 5
 #define IRLefBac 2
-#define IRBac 5
+#define IRBac 4
 #define IRRig 6
 
 #define motor_kill 2
@@ -100,6 +100,7 @@ void recalc()
   x_to_travel -= abs(my);
   bear_to_travel -= abs(mx/MOUSE_RADIUS);
   
+  //delay(500);
   //x_to_travel = 0;
   //bear_to_travel = 0;
 }
@@ -111,13 +112,17 @@ void loop(){
 void calculateMovements(){
   if (!isReversed){ //Driving forwards
     if (detectOpening(LEFT)){
+      Serial.println("Going left");
       turn90ThenDrive(false);
     } else if (detectOpening(FORWARD)){
+      Serial.println("Going forward");
       drive(driveAmount);
     } else if (detectOpening(RIGHT)){
+      Serial.println("Going right");
       turn90ThenDrive(true);
     } else {
-      isReversed = !isReversed;
+      Serial.println("Stopped");
+      //isReversed = !isReversed;
     }
   } else { //Driving backwards
     if (detectOpening(RIGHT)){
@@ -133,18 +138,18 @@ void calculateMovements(){
 }
 
 void turn90ThenDrive(boolean isRightSensor){
-  isReversed = !isReversed;
-  drive(2000);
-  isReversed = !isReversed;
+  //isReversed = !isReversed;
+  //drive(2000);
+  //isReversed = !isReversed;
   
   //Works out whether the robot should spin clockwise (equation is same as isRightSensor xor isReversed)
   boolean clockwise = (isRightSensor != isReversed);
   
   //Power the motors
   if (clockwise){
-    setMotors(turn_strength, turn_strength/2);
+    setMotors(turn_strength, -turn_strength/2);
   } else {
-    setMotors(turn_strength/2, turn_strength);
+    setMotors(-turn_strength/2, turn_strength);
   }
   
   //Wait until the robot has turned enough
@@ -153,7 +158,7 @@ void turn90ThenDrive(boolean isRightSensor){
     recalc();
   }
   
-  drive(driveAmount);
+  drive(driveAmount*10);
 }
 
 void drive(int distance){
@@ -190,7 +195,7 @@ void setMotors(int left, int right){
 
 boolean detectOpening(int dir){
   if (dir == LEFT) { //return whether there is a left opening
-    return (digitalRead(IRLefFro) == HIGH);
+    return (digitalRead(IRLefFro) == HIGH && digitalRead(IRLefBac) == HIGH);
   } else if (dir == FORWARD) { //return whether there is a front opening
     return (digitalRead(IRFor) == HIGH);
   } else if (dir == RIGHT) { //return whether there is a right opening
