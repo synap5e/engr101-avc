@@ -14,7 +14,8 @@
 #define dir_right 13  //dir control for motor outputs 3 and 4 is on digital pin 13
 
 #define IRFor 7
-#define IRLef 4
+#define IRLefFro 4
+#define IRLefBac 2
 #define IRBac 5
 #define IRRig 6
 
@@ -182,25 +183,6 @@ void setMotors(int left, int right){
   if (right < 0) rightValue = LOW; //The left wheel is driving backward
   digitalWrite(dir_right, rightValue);
 
-  /*
-  Serial.print("Openings L: ");
-  Serial.print(detectOpening(LEFT));
-  Serial.print(" F: ");
-  Serial.print(detectOpening(FORWARD));
-  Serial.print(" R: ");
-  Serial.print(detectOpening(RIGHT));
-  Serial.print(" B: ");
-  Serial.println(detectOpening(BACKWARD));
-  
-   Serial.print("Motors L: ");
-  Serial.print(left);
-  Serial.print(" R: ");
-  Serial.println(right);
-  
-  left = 0;
-  right = 0;
-  */
-
   //Set the strength of the motors
   analogWrite(pwm_left, abs(left));	
   analogWrite(pwm_right, abs(right));
@@ -208,12 +190,13 @@ void setMotors(int left, int right){
 
 boolean detectOpening(int dir){
   if (dir == LEFT) { //return whether there is a left opening
-    return (digitalRead(IRLef) == HIGH);
+    return (digitalRead(IRLefFro) == HIGH);
   } else if (dir == FORWARD) { //return whether there is a front opening
     return (digitalRead(IRFor) == HIGH);
   } else if (dir == RIGHT) { //return whether there is a right opening
     return (digitalRead(IRRig) == HIGH);
   } else if (dir == BACKWARD) { //return whether there is a back opening
+    return true;
     return (digitalRead(IRBac) == HIGH);
   }
 }
