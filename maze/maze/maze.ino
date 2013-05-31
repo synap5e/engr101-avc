@@ -14,7 +14,7 @@
 #define dir_right 13  //dir control for motor outputs 3 and 4 is on digital pin 13
 
 #define IRFor 7
-#define IRLefFro 5
+#define IRLefFro 10
 #define IRLefBac 2
 #define IRBac 4
 #define IRRig 6
@@ -28,10 +28,11 @@
 
 // The values that need to be moved for one movement/turn
 #define driveAmount 500
-#define turnAmount 140
+#define turnAmount 100
 
-#define motor_strength 128*0.8
-#define turn_strength 155
+#define motor_strength 128
+#define turn_strength 165
+#define weak_turn_strength 130
 
 PS2 mouse(MCLK, MDATA);  
 
@@ -57,18 +58,24 @@ void mouse_init()
 
 void setup(){
    Serial.begin(9600);
+   Serial.print("Started");
 
    pinMode(pwm_left, OUTPUT);  //Set control pins to be outputs
    pinMode(pwm_right, OUTPUT);
    pinMode(dir_left, OUTPUT);
    pinMode(dir_right, OUTPUT);
+   Serial.print("Outputs set");
    
-   pinMode(motor_kill, INPUT);
+   //pinMode(motor_kill, INPUT);
   
    analogWrite(pwm_left, 0);	
    analogWrite(pwm_right, 0);
+   
+   Serial.print("Written to motors");
 
    mouse_init();
+   
+   Serial.print("Mouse Started");
    
    delay(2000);
 }
@@ -147,9 +154,9 @@ void turn90ThenDrive(boolean isRightSensor){
   
   //Power the motors
   if (clockwise){
-    setMotors(turn_strength, -turn_strength/2);
+    setMotors(turn_strength, -weak_turn_strength);
   } else {
-    setMotors(-turn_strength/3, turn_strength/2);
+    setMotors(-weak_turn_strength, turn_strength);
   }
   
   //Wait until the robot has turned enough
