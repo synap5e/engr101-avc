@@ -30,6 +30,8 @@
 #define TIMEOUT	 2500  // waits for 2500 us for sensor outputs to go low
 #define EMITTER_PIN   2     // emitter is controlled by digital pin 2
 
+#define THRESHOLD 100
+
 // sensors 0 through 7 are connected to digital pins 3 through 10, respectively
 QTRSensorsRC qtrrc((unsigned char[]) {3, 4, 5, 6, 7, 8, 9, 10},
   NUM_SENSORS, TIMEOUT, EMITTER_PIN); 
@@ -42,6 +44,18 @@ int dir_b = 13;  //dir control for motor outputs 3 and 4 is on digital pin 13
 
 void setup()
 {
+  
+  pinMode(pwm_a, OUTPUT);  //Set control pins to be outputs
+  pinMode(pwm_b, OUTPUT);
+  pinMode(dir_a, OUTPUT);
+  pinMode(dir_b, OUTPUT);
+  
+  digitalWrite(dir_a, HIGH);  //Set motor direction, 1 low, 2 high
+  digitalWrite(dir_b, HIGH); //Set motor direction, 3 high, 4 low
+  
+  analogWrite(pwm_a, 0);	
+  analogWrite(pwm_b, 0);
+  
   delay(500);
   int i;
   pinMode(13, OUTPUT);
@@ -74,17 +88,13 @@ void setup()
 
 
 
-
-  pinMode(pwm_a, OUTPUT);  //Set control pins to be outputs
-  pinMode(pwm_b, OUTPUT);
-  pinMode(dir_a, OUTPUT);
-  pinMode(dir_b, OUTPUT);
   
   digitalWrite(dir_a, HIGH);  //Set motor direction, 1 low, 2 high
   digitalWrite(dir_b, HIGH); //Set motor direction, 3 high, 4 low
   
   analogWrite(pwm_a, 0);	
   analogWrite(pwm_b, 0);
+
   
 }
 
@@ -120,18 +130,30 @@ void loop()
 
   long mini = min(min(ave_left, ave_mid),ave_right); //determining the lowest average sensor values
 
-  if(mini == ave_left){
-      analogWrite(pwm_a, 255);	
-      analogWrite(pwm_b, 180);
-  }
-  else if(mini == ave_right){
-      analogWrite(pwm_a, 180);	
-      analogWrite(pwm_b, 255);
+
+  if (mini > THRESHOLD) {
+    if(mini == ave_left){
+        analogWrite(pwm_a, 0);	
+        analogWrite(pwm_b, 0);
+    }
+    else if(mini == ave_right){
+        analogWrite(pwm_a, 0);	
+        analogWrite(pwm_b, 0);
+    }
+    else{
+        analogWrite(pwm_a, 255);	
+        analogWrite(pwm_b, 255);
+    }
   }
   else{
-      analogWrite(pwm_a, 180);	
+      analogWrite(pwm_a, 255);	
       analogWrite(pwm_b, 255);
   }
+  
+  digitalWrite(dir_a, HIGH);  //Set motor direction, 1 low, 2 high
+  digitalWrite(dir_b, HIGH); //Set motor direction, 3 high, 4 low
+  
+  Serial.print(mini);
   
   delay(250);
 }

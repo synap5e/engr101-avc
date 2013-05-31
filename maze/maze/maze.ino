@@ -28,7 +28,7 @@
 
 // The values that need to be moved for one movement/turn
 #define driveAmount 500
-#define turnAmount 100
+#define turnAmount 0
 
 #define motor_strength 128
 #define turn_strength 165
