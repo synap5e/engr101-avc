@@ -1,5 +1,5 @@
 #!/usr/bin/env python 
-timeout = 50 
+timeout = 500
 packet_header = [
 0x7E, 						# delimiter
 0x00, 0x11, 					# length
@@ -40,53 +40,34 @@ if not pygame.joystick.get_count():
 joystick = pygame.joystick.Joystick(0)
 joystick.init()
  
+clock = pygame.time.Clock()
+
 pygame.init()
 screen = pygame.display.set_mode((640, 480))
 pygame.display.set_caption('AVC')
 
 done = False
-lasttime = 0
-lastValues = [0, 0]
 while not done:
-	forwards = joystick.get_button(7)
+	#print int(round(time.time() * 1000))
 	for event in pygame.event.get():
 		if ((event.type == KEYDOWN and event.key == K_ESCAPE) or event.type == pygame.QUIT):
-			done = True	
-	millis = int(round(time.time() * 1000))
-	values = [round(joystick.get_axis(1), 1), round(joystick.get_axis(2), 1)]
-	buttons = joystick.get_numbuttons()
-	if not lastValues == values or millis - lasttime > timeout:
-		lasttime = millis
-		lastValues = copy.deepcopy(values)
-		direction = 0
-		power_l = int(255 * abs(values[1]))
-		power_r = int(255 * abs(values[0]))
-		if values[0] < -0.1:
-			# left forward
-			direction |= 1 << 3
-			forwards = False
-		elif values[0] > 0.1:
-			# left back
-			forwards = False
-		else:
-			power_r = 0
-		if values[1] < -0.1:
-			# right forward
-			direction |= 1 << 4
-			forwards = False
-		elif values[1] > 0.1:
-			# right back
-			forwards = False
-		else:
-			power_l = 0
-		if forwards:
-			payload = [1 << 3 | 1 << 4, 255, 255]
-		else:
-			payload = [direction, power_l, power_r]
-		packet = packet_header + payload
-		crcVal = crc(packet)
-		packet += [crcVal]
-		port.write(bytearray(packet))
-		print "%s  crc: %d" % (payload, crcVal)
+			done = True
+	turn = -round(joystick.get_axis(0), 1) / 2;
+	left = 0
+	right = 0
+	if joystick.get_button(7):
+		left = 255
+		right = 255
+	if turn < -0.1:
+		left = int(left * (1-abs(turn)))
+	elif turn > 0.1:
+		right = int(right * (1-abs(turn)))
+	payload = [(1 << 3 | 1 << 4), left, right]
+	packet = packet_header + payload
+	crcVal = crc(packet)
+	packet += [crcVal]
+	port.write(bytearray(packet))
+	print "%s  crc: %d" % (payload, crcVal)
+	clock.tick(20)
 port.close()
 
