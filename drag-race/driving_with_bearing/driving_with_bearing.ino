@@ -14,7 +14,8 @@
  * The distance from the mouse to the axis of rotation
  * The units are the units used by the mouse
  */
-#define MOUSE_RADIUS 1835.0
+#define MOUSE_RADIUS 2500
+//1835.0
 
 PS2 mouse(MCLK, MDATA);
 
@@ -53,7 +54,7 @@ void setup(){
 
    
    Serial.print("Waiting for kill switch... ");
-   while(!digitalRead(motor_kill));
+   //while(!digitalRead(motor_kill));
    Serial.println("done");
 
    Serial.print("Bringing up mouse... ");
@@ -101,7 +102,7 @@ long distance = 200000;
 void loop(){
   recalc();
 
-  if (y > distance || !digitalRead(motor_kill)){
+  if (y > distance || !digitalRead(motor_kill) && false){
     analogWrite(pwm_a, 0);	
     analogWrite(pwm_b, 0);
  /* } else if ((abs(bearing) < 0.15) && (abs(x) < 50)){
