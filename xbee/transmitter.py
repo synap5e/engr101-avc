@@ -46,7 +46,6 @@ pygame.display.set_caption('AVC')
 
 done = False
 lasttime = 0
-lastValues = [0, 0]
 while not done:
 	forwards = joystick.get_button(7)
 	for event in pygame.event.get():
@@ -54,10 +53,8 @@ while not done:
 			done = True	
 	millis = int(round(time.time() * 1000))
 	values = [round(joystick.get_axis(1), 1), round(joystick.get_axis(2), 1)]
-	buttons = joystick.get_numbuttons()
-	if not lastValues == values or millis - lasttime > timeout:
+	if millis - lasttime > timeout:
 		lasttime = millis
-		lastValues = copy.deepcopy(values)
 		direction = 0
 		power_l = int(255 * abs(values[1]))
 		power_r = int(255 * abs(values[0]))
