@@ -1,7 +1,10 @@
 #include <ps2.h>
 
-#define MDATA 8
-#define MCLK 9
+// orange
+#define MDATA 6
+
+// green
+#define MCLK 7
 
 #define FORWARD 0
 #define LEFT 1
@@ -13,11 +16,11 @@
 #define dir_left 12  //dir control for motor outputs 1 and 2 is on digital pin 12
 #define dir_right 13  //dir control for motor outputs 3 and 4 is on digital pin 13
 
-#define IRFor 7
-#define IRLefFro 10
-#define IRLefBac 2
-#define IRBac 4
-#define IRRig 6
+#define IRFor 2
+#define IRLefFro 4
+#define IRLefBac 5
+//#define IRBac 4
+//#define IRRig 6
 
 #define motor_kill 2
 /*
