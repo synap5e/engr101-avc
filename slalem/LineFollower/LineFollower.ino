@@ -10,7 +10,7 @@
 #define dir_right 13  //dir control for motor outputs 3 and 4 is on digital pin 13
 
 #define motor_kill 8
-  
+
 
 // sensors 0 through 7 are connected to digital pins 3 through 10, respectively
 QTRSensorsRC qtrrc((unsigned char[]) {
@@ -39,11 +39,14 @@ void setup()
   Serial.println("Calibrating... ");
 
   delay(500);
-  digitalWrite(13, HIGH);    // turn on Arduino's LED to indicate we are in calibration mode
   for (int i = 0; i < 400; i++)  // make the calibration take about 10 seconds
   {
     qtrrc.calibrate();       // reads all sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
   }
+
+  digitalWrite(dir_left, HIGH);  //Set motor direction, 1 low, 2 high
+  digitalWrite(dir_right, HIGH); //Set motor direction, 3 high, 4 low
+
   // print the calibration minimum values measured when emitters were on
 
   for (int i = 0; i < NUM_SENSORS; i++)
@@ -67,29 +70,26 @@ void setup()
 }
 
 int lastError = 0;
-#define KP 0.06
-#define KD 1.500
+float KP = 0.8;
+float KD = 15;
+#define KI 0.0001
 
-#define M1 100 // left
-#define M2 100 // right
+#define M1 200 // left
+#define M2 200 // right
 
 void loop()
 {
-  
-    if (digitalRead(motor_kill)){
-    analogWrite(pwm_left, 0);	
-    analogWrite(pwm_right, 0);
-    return;
-  } 
-  // read calibrated sensor values and obtain a measure of the line position from 0 to 5000
-  // To get raw sensor values, call:
-  //  qtrrc.read(sensorValues); instead of unsigned int position = qtrrc.readLine(sensorValues);
+
   int pos = qtrrc.readLine(sensorValues, QTR_EMITTERS_ON, true);
-  int error = (2 * (pos - 2500))/5;
 
- // Serial.println(error);
+  // proportional
+  int error = pos - 2500;
 
-  int motorSpeed = KP * error + KD * (error - lastError);
+
+  int derivative = (error - lastError);
+
+
+  int motorSpeed = KP * error + KD * derivative;
   lastError = error;
 
   int m1Speed = M1 - motorSpeed;
@@ -102,23 +102,61 @@ void loop()
   if (m2Speed < 0)
     m2Speed = 0;
 
+
+  for (unsigned char i = 0; i < NUM_SENSORS; i++)
+  {
+    Serial.print(sensorValues[i]);
+    Serial.print('\t');
+  }
+  Serial.println();
+  Serial.print(pos);
+  Serial.print("\t");
   Serial.print(error);
   Serial.print("\t");
   Serial.print(m1Speed);
   Serial.print("\t");
   Serial.println(m2Speed);
-  
+  Serial.println();
+
+
+  if (digitalRead(motor_kill)){
+    analogWrite(pwm_left, 0);	
+    analogWrite(pwm_right, 0);
+    delay(100);
+  } 
+  else {
     analogWrite(pwm_left, m1Speed);//max(255, m1Speed));	
-  analogWrite(pwm_right, m2Speed);//max(255, m2Speed));
+    analogWrite(pwm_right, m2Speed);//max(255, m2Speed));
+  }
 
 
+  if (Serial.available() >= 5){
+    float p = (Serial.read()-48)*10 + (Serial.read()-48);
+    float d = (Serial.read()-48)*100 + (Serial.read()-48)*10 + (Serial.read()-48);
+
+    p/=100;
+    d/=10;
+
+    KP = p;
+    KD = d;
+
+    Serial.println();
+    Serial.print("KP: ");
+    Serial.println(KP);
+    Serial.print("KD: ");
+    Serial.println(KD);
+
+
+
+  }
 
   // analogWrite(pwm_left, m1Speed);	
   //  analogWrite(pwm_right, m2Speed);
 
 
-//  delay(250);
+  //  delay(250);
 }
+
 
 
 
