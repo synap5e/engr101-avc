@@ -9,6 +9,8 @@
 #define dir_left 12  //dir control for motor outputs 1 and 2 is on digital pin 12
 #define dir_right 13  //dir control for motor outputs 3 and 4 is on digital pin 13
 
+#define motor_kill 8
+  
 
 // sensors 0 through 7 are connected to digital pins 3 through 10, respectively
 QTRSensorsRC qtrrc((unsigned char[]) {
@@ -37,14 +39,11 @@ void setup()
   Serial.println("Calibrating... ");
 
   delay(500);
-  pinMode(13, OUTPUT);
   digitalWrite(13, HIGH);    // turn on Arduino's LED to indicate we are in calibration mode
   for (int i = 0; i < 400; i++)  // make the calibration take about 10 seconds
   {
     qtrrc.calibrate();       // reads all sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
   }
-  digitalWrite(13, LOW);     // turn off Arduino's LED to indicate we are through with calibration
-
   // print the calibration minimum values measured when emitters were on
 
   for (int i = 0; i < NUM_SENSORS; i++)
@@ -68,14 +67,20 @@ void setup()
 }
 
 int lastError = 0;
-#define KP 0.075
+#define KP 0.06
 #define KD 1.500
 
-#define M1 255 // left
-#define M2 255 // right
+#define M1 100 // left
+#define M2 100 // right
 
 void loop()
 {
+  
+    if (digitalRead(motor_kill)){
+    analogWrite(pwm_left, 0);	
+    analogWrite(pwm_right, 0);
+    return;
+  } 
   // read calibrated sensor values and obtain a measure of the line position from 0 to 5000
   // To get raw sensor values, call:
   //  qtrrc.read(sensorValues); instead of unsigned int position = qtrrc.readLine(sensorValues);
@@ -102,13 +107,17 @@ void loop()
   Serial.print(m1Speed);
   Serial.print("\t");
   Serial.println(m2Speed);
+  
+    analogWrite(pwm_left, m1Speed);//max(255, m1Speed));	
+  analogWrite(pwm_right, m2Speed);//max(255, m2Speed));
+
 
 
   // analogWrite(pwm_left, m1Speed);	
   //  analogWrite(pwm_right, m2Speed);
 
 
-  delay(250);
+//  delay(250);
 }
 
 
