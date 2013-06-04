@@ -37,15 +37,21 @@
 #define MOUSE_RADIUS 1835.0
 
 // The values that need to be moved for one movement/turn
-#define driveAmount 500
-#define turnAmount 0
+#define drive_amount 500
+#define turn_amount 0
 
 #define motor_strength 128
 #define turn_strength 165
 #define weak_turn_strength 130
 
+#define left_threshold 15
+
 PS2 mouse(MCLK, MDATA);  
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+
+// How frequently are we going to send out a ping (in milliseconds). 50ms would be 20 times a second.
+#define ping_speed 100 
+unsigned long ping_timer;     // Holds the next ping time.
 
 long x = 0;
 long y = 0;   
@@ -88,6 +94,7 @@ void setup(){
    
    Serial.println("Mouse Started");
    
+   ping_timer = millis();
    delay(2000);
 }
 
@@ -117,10 +124,24 @@ void recalc()
   
   x_to_travel -= abs(my);
   bear_to_travel -= abs(mx/MOUSE_RADIUS);
+
+  if (millis() >= ping_timer) {   // ping_speed milliseconds since last ping, do another ping.
+    ping_timer += ping_speed;      // Set the next ping time.
+    sonar.ping_timer(echoCheck); // Send out the ping, calls "echoCheck" function every 24uS where you can check the ping status.
+  }
   
   //delay(500);
   //x_to_travel = 0;
   //bear_to_travel = 0;
+}
+
+unsigned int left_distance = -1;
+
+void echoCheck() { // Timer2 interrupt calls this function every 24uS where you can check the ping status.
+  // Don't do anything here! - no shit
+  if (sonar.check_timer()) { // This is how you check to see if the ping was received.
+    left_distance = sonar.ping_result / US_ROUNDTRIP_CM; // Ping returned, uS result in ping_result, convert to cm with US_ROUNDTRIP_CM.
+  }
 }
 
 void loop(){
@@ -134,7 +155,7 @@ void calculateMovements(){
       turn90ThenDrive(false);
     } else if (detectOpening(FORWARD)){
       Serial.println("Going forward");
-      drive(driveAmount);
+      drive(drive_amount);
     } else if (detectOpening(RIGHT)){
       Serial.println("Going right");
       turn90ThenDrive(true);
@@ -146,7 +167,7 @@ void calculateMovements(){
     if (detectOpening(RIGHT)){
       turn90ThenDrive(true);
     } else if (detectOpening(BACKWARD)){
-      drive(driveAmount);
+      drive(drive_amount);
     } else if (detectOpening(LEFT)){
       turn90ThenDrive(false);
     } else {
@@ -157,7 +178,7 @@ void calculateMovements(){
 
 void turn90ThenDrive(boolean isRightSensor){
   isReversed = !isReversed;
-  drive(driveAmount*2);
+  drive(drive_amount*2);
   isReversed = !isReversed;
   
   //Works out whether the robot should spin clockwise (equation is same as isRightSensor xor isReversed)
@@ -171,12 +192,12 @@ void turn90ThenDrive(boolean isRightSensor){
   }
   
   //Wait until the robot has turned enough
-  bear_to_travel = turnAmount;
+  bear_to_travel = turn_amount;
   while (bear_to_travel > 0){
     recalc();
   }
   
-  drive(driveAmount*10);
+  drive(drive_amount*10);
 }
 
 void drive(int distance){
@@ -213,7 +234,7 @@ void setMotors(int left, int right){
 
 boolean detectOpening(int dir){
   if (dir == LEFT) { //return whether there is a left opening
-    return (digitalRead(IRLefFro) == HIGH && digitalRead(IRLefBac) == HIGH);
+    return (digitalRead(IRLefFro) == HIGH && digitalRead(IRLefBac) == HIGH && left_distance > left_threshold);
   } else if (dir == FORWARD) { //return whether there is a front opening
     return (digitalRead(IRFor) == HIGH);
   } else if (dir == RIGHT) { //return whether there is a right opening
