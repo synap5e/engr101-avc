@@ -239,11 +239,12 @@ boolean detectOpening(int dir){
     return (digitalRead(IRLefFro) == HIGH && digitalRead(IRLefBac) == HIGH && left_distance > left_threshold);
   } else if (dir == FORWARD) { //return whether there is a front opening
     return (digitalRead(IRFor) == HIGH);
-  } else if (dir == RIGHT) { //return whether there is a right opening
+  } /*else if (dir == RIGHT) { //return whether there is a right opening
     return (digitalRead(IRRig) == HIGH);
   } else if (dir == BACKWARD) { //return whether there is a back opening
     return true;
     return (digitalRead(IRBac) == HIGH);
-  }
+  }*/
+  return false;
 }
 
