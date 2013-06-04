@@ -87,15 +87,17 @@ void setup(){
   
    analogWrite(pwm_left, 0);	
    analogWrite(pwm_right, 0);
-   
-   Serial.println("Written to motors");
 
    mouse_init();
    
    Serial.println("Mouse Started");
    
+   Serial.print("Waiting for kill switch... ");
+   while(digitalRead(motor_kill));
+   Serial.println("done");
+
+   Serial.println("Starting ping");
    ping_timer = millis();
-   delay(2000);
 }
 
 void recalc()
