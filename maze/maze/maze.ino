@@ -1,4 +1,11 @@
 #include <ps2.h>
+#include <NewPing.h>
+
+
+// TODO change these
+#define TRIGGER_PIN  12  // Arduino pin tied to trigger pin on the ultrasonic sensor.
+#define ECHO_PIN     11  // Arduino pin tied to echo pin on the ultrasonic sensor.
+#define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
 
 // orange
 #define MDATA 6
@@ -38,6 +45,7 @@
 #define weak_turn_strength 130
 
 PS2 mouse(MCLK, MDATA);  
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 
 long x = 0;
 long y = 0;   
