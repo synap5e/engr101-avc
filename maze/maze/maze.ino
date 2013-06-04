@@ -17,6 +17,7 @@
 #define LEFT 1
 #define BACKWARD 2
 #define RIGHT 3
+#define LEFT_CLOSE 4
 
 #define pwm_left 3  //PWM control for motor outputs 1 and 2 is on digital pin 3
 #define pwm_right 11  //PWM control for motor outputs 3 and 4 is on digital pin 11
@@ -44,7 +45,7 @@
 #define turn_strength 165
 #define weak_turn_strength 130
 
-#define left_threshold 15
+#define left_threshold 12
 
 PS2 mouse(MCLK, MDATA);  
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
@@ -187,7 +188,7 @@ void turn90(boolean isRightSensor){
   //Wait until the robot has turned enough
   bear_to_travel = turn_amount;
   int timeOut = millis()+timeout_period;
-  while (bear_to_travel > 0 && (clockwise || detectOpening(LEFT)) && millis() < timeOut) {
+  while (bear_to_travel > 0 && (clockwise || detectOpening(LEFT_CLOSE)) && millis() < timeOut) {
     recalc();
   }
    
@@ -233,7 +234,9 @@ boolean detectOpening(int dir){
     return (digitalRead(IRLefFro) == HIGH && digitalRead(IRLefBac) == HIGH && left_distance > left_threshold);
   } else if (dir == FORWARD) { //return whether there is a front opening
     return (digitalRead(IRFor) == HIGH);
-  } /*else if (dir == RIGHT) { //return whether there is a right opening
+  } else if (dir == LEFT_CLOSE){
+    return (digitalRead(IRLefFro) == HIGH && digitalRead(IRLefBac) == HIGH);
+  }/*else if (dir == RIGHT) { //return whether there is a right opening
     return (digitalRead(IRRig) == HIGH);
   } else if (dir == BACKWARD) { //return whether there is a back opening
     return true;
