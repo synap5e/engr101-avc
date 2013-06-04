@@ -61,24 +61,24 @@ void mouse_init()
 
 void setup(){
    Serial.begin(9600);
-   Serial.print("Started");
+   Serial.println("Started");
 
    pinMode(pwm_left, OUTPUT);  //Set control pins to be outputs
    pinMode(pwm_right, OUTPUT);
    pinMode(dir_left, OUTPUT);
    pinMode(dir_right, OUTPUT);
-   Serial.print("Outputs set");
+   Serial.println("Outputs set");
    
    //pinMode(motor_kill, INPUT);
   
    analogWrite(pwm_left, 0);	
    analogWrite(pwm_right, 0);
    
-   Serial.print("Written to motors");
+   Serial.println("Written to motors");
 
    mouse_init();
    
-   Serial.print("Mouse Started");
+   Serial.println("Mouse Started");
    
    delay(2000);
 }
