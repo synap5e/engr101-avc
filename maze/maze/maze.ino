@@ -17,19 +17,20 @@
 #define LEFT 1
 #define BACKWARD 2
 #define RIGHT 3
+#define LEFT_CLOSE 4
 
 #define pwm_left 3  //PWM control for motor outputs 1 and 2 is on digital pin 3
 #define pwm_right 11  //PWM control for motor outputs 3 and 4 is on digital pin 11
 #define dir_left 12  //dir control for motor outputs 1 and 2 is on digital pin 12
 #define dir_right 13  //dir control for motor outputs 3 and 4 is on digital pin 13
 
-#define IRFor 2
+#define IRFor 9
 #define IRLefFro 4
 #define IRLefBac 5
 //#define IRBac 4
 //#define IRRig 6
 
-#define motor_kill 2
+#define motor_kill 8
 /*
  * The distance from the mouse to the axis of rotation
  * The units are the units used by the mouse
@@ -44,13 +45,15 @@
 #define turn_strength 165
 #define weak_turn_strength 130
 
-#define left_threshold 15
+#define left_threshold 12
 
 PS2 mouse(MCLK, MDATA);  
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 
 // How frequently are we going to send out a ping (in milliseconds). 50ms would be 20 times a second.
 #define ping_speed 100 
+
+#define timeout_period 4000
 unsigned long ping_timer;     // Holds the next ping time.
 
 long x = 0;
@@ -151,34 +154,23 @@ void loop(){
 }
 
 void calculateMovements(){
-  if (!isReversed){ //Driving forwards
-    if (detectOpening(LEFT)){
-      Serial.println("Going left");
-      turn90ThenDrive(false);
-    } else if (detectOpening(FORWARD)){
-      Serial.println("Going forward");
-      drive(drive_amount);
-    } else if (detectOpening(RIGHT)){
-      Serial.println("Going right");
-      turn90ThenDrive(true);
-    } else {
-      Serial.println("Stopped");
-      //isReversed = !isReversed;
-    }
-  } else { //Driving backwards
-    if (detectOpening(RIGHT)){
-      turn90ThenDrive(true);
-    } else if (detectOpening(BACKWARD)){
-      drive(drive_amount);
-    } else if (detectOpening(LEFT)){
-      turn90ThenDrive(false);
-    } else {
-      isReversed = !isReversed;
-    }
+   if (digitalRead(motor_kill)){
+    analogWrite(pwm_left, 0);	
+    analogWrite(pwm_right, 0);
+    delay(100);
+  } else if (detectOpening(LEFT)){
+    Serial.println("Going left");
+    turn90(false);
+    drive(drive_amount*10);
+  } else if (detectOpening(FORWARD)){
+    Serial.println("Going forward");
+    drive(drive_amount);
+  } else {
+    turn90(true);
   }
 }
 
-void turn90ThenDrive(boolean isRightSensor){
+void turn90(boolean isRightSensor){
   isReversed = !isReversed;
   drive(drive_amount*2);
   isReversed = !isReversed;
@@ -195,11 +187,13 @@ void turn90ThenDrive(boolean isRightSensor){
   
   //Wait until the robot has turned enough
   bear_to_travel = turn_amount;
-  while (bear_to_travel > 0){
+  int timeOut = millis()+timeout_period;
+  while (bear_to_travel > 0 && (clockwise || detectOpening(LEFT_CLOSE)) && millis() < timeOut) {
     recalc();
   }
-  
-  drive(drive_amount*10);
+   
+  //Stop the motors
+  setMotors(0,0);
 }
 
 void drive(int distance){
@@ -211,7 +205,8 @@ void drive(int distance){
   
   //Wait until either the robot has gone in the right direction or has run into a wall
   x_to_travel = distance;
-  while (x_to_travel > 0 && ((detectOpening(FORWARD) && !isReversed) || (detectOpening(BACKWARD) && isReversed))){
+  int timeOut = millis()+timeout_period;
+  while (x_to_travel > 0 && ((detectOpening(FORWARD) && !isReversed) || isReversed) && millis() < timeOut){
     recalc();
   }
   
@@ -239,7 +234,9 @@ boolean detectOpening(int dir){
     return (digitalRead(IRLefFro) == HIGH && digitalRead(IRLefBac) == HIGH && left_distance > left_threshold);
   } else if (dir == FORWARD) { //return whether there is a front opening
     return (digitalRead(IRFor) == HIGH);
-  } /*else if (dir == RIGHT) { //return whether there is a right opening
+  } else if (dir == LEFT_CLOSE){
+    return (digitalRead(IRLefFro) == HIGH && digitalRead(IRLefBac) == HIGH);
+  }/*else if (dir == RIGHT) { //return whether there is a right opening
     return (digitalRead(IRRig) == HIGH);
   } else if (dir == BACKWARD) { //return whether there is a back opening
     return true;
