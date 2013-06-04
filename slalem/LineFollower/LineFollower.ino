@@ -38,8 +38,8 @@ void setup()
 
   Serial.println("Calibrating... ");
 
-  delay(500);
-  for (int i = 0; i < 400; i++)  // make the calibration take about 10 seconds
+  //delay(500);
+  for (int i = 0; i < 200; i++)  // make the calibration take about 10 seconds
   {
     qtrrc.calibrate();       // reads all sensors 10 times at 2500 us per read (i.e. ~25 ms per call)
   }
@@ -74,8 +74,17 @@ float KP = 0.8;
 float KD = 15;
 #define KI 0.0001
 
-#define M1 200 // left
-#define M2 200 // right
+#define M1 100 // left
+#define M2 100 // right
+
+#define MAX_SPEED 160
+#define SUPER_MAX_SPEED 190
+#define MIN_SPEED 25
+
+int max_speed = MAX_SPEED;
+int startTime = millis();
+
+unsigned long next = 0;
 
 void loop()
 {
@@ -83,9 +92,8 @@ void loop()
   int pos = qtrrc.readLine(sensorValues, QTR_EMITTERS_ON, true);
 
   // proportional
-  int error = pos - 2500;
-
-
+  int error = ( 2 * (pos - 2500)) / 5;
+  
   int derivative = (error - lastError);
 
 
@@ -103,11 +111,11 @@ void loop()
     m2Speed = 0;
 
 
-  for (unsigned char i = 0; i < NUM_SENSORS; i++)
+ /* for (unsigned char i = 0; i < NUM_SENSORS; i++)
   {
     Serial.print(sensorValues[i]);
     Serial.print('\t');
-  }
+  }*/
   Serial.println();
   Serial.print(pos);
   Serial.print("\t");
@@ -118,6 +126,10 @@ void loop()
   Serial.println(m2Speed);
   Serial.println();
 
+  if (millis() - startTime > 60000) {
+    //max_speed = SUPER_MAX_SPEED;
+  }
+
 
   if (digitalRead(motor_kill)){
     analogWrite(pwm_left, 0);	
@@ -125,12 +137,24 @@ void loop()
     delay(100);
   } 
   else {
-    analogWrite(pwm_left, m1Speed);//max(255, m1Speed));	
-    analogWrite(pwm_right, m2Speed);//max(255, m2Speed));
+    Serial.println(m1Speed);
+    Serial.println(m2Speed);
+    Serial.println();
+  //  Serial.println(millis());
+   /* if (next <= millis()){
+      Serial.println("foo");
+       next = millis() + 1000;
+       analogWrite(pwm_left, 255);//max(255, m1Speed));	
+       analogWrite(pwm_right, 255);//max(255, m2Speed));
+       delay(100);
+    }*/
+    
+    analogWrite(pwm_left,  min(max_speed, max(m1Speed, MIN_SPEED)));//max(255, m1Speed));	
+    analogWrite(pwm_right, min(max_speed, max(m2Speed, MIN_SPEED)));//max(255, m2Speed));
   }
 
 
-  if (Serial.available() >= 5){
+ /* if (Serial.available() >= 5){
     float p = (Serial.read()-48)*10 + (Serial.read()-48);
     float d = (Serial.read()-48)*100 + (Serial.read()-48)*10 + (Serial.read()-48);
 
@@ -148,7 +172,7 @@ void loop()
 
 
 
-  }
+  }*/
 
   // analogWrite(pwm_left, m1Speed);	
   //  analogWrite(pwm_right, m2Speed);
