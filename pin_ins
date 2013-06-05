@@ -1,0 +1,12 @@
+A0 = Green trigger 	/ red line 
+A1 = Yellow echo	/ orange line
+A2 - A5 = YGBP line
+
+resistor = GND to 8
+8 = purple kill
+9 = front sensor
+7 = green mouse
+6 = orange mouse
+5 = blue with green tie sensor
+4 = plain blue (non front) sensor
+2 = white QTR IR line
