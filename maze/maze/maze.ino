@@ -191,6 +191,7 @@ void turn90(boolean isRightSensor){
   while (bear_to_travel > 0 && (clockwise || detectOpening(LEFT_CLOSE)) && millis() < timeOut) {
     recalc();
   }
+  Serial.println("Bearing Reached: " + (bear_to_travel <= 0) + " Left wall detected: " + (!clockwise && !detectOpening(LEFT_CLOSE)) + " Timeout Reached: " + (millis() > timeOut));
    
   //Stop the motors
   setMotors(0,0);
@@ -209,6 +210,7 @@ void drive(int distance){
   while (x_to_travel > 0 && ((detectOpening(FORWARD) && !isReversed) || isReversed) && millis() < timeOut){
     recalc();
   }
+  Serial.println("Distance Reached: " + (x_to_travel <= 0) + " Front wall detected: " + (!detectOpening(FORWARD) && !isReversed) + " Timeout Reached: " + (millis() > timeOut));
   
   //Stop the motors
   setMotors(0,0);
